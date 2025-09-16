@@ -1,12 +1,11 @@
 
-:root{--bg:#0b1324;--card:#121b33;--text:#e9edf5;--muted:#9fb0d0;--accent:#2bd4c5}
+:root{--bg:#0b1324;--card:#121b33;--text:#e9edf5;--muted:#9fb0d0;--accent:#0052cc;--accent2:#ff6600}
 *{box-sizing:border-box}
 body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Ubuntu,"Helvetica Neue",Arial;background:linear-gradient(180deg,#0b1324 0%,#0d1530 100%);color:var(--text)}
 .container{max-width:1100px;margin:0 auto;padding:24px}
 .nav{display:flex;align-items:center;justify-content:space-between;padding:16px 0}
-.brand{display:flex;gap:10px;align-items:center;font-weight:700;font-size:20px}
-.brand .dot{width:10px;height:10px;border-radius:50%;background:var(--accent)}
-.btn{background:var(--accent);color:#062a28;border:none;padding:10px 14px;border-radius:12px;font-weight:700;cursor:pointer}
+.brand img{height:28px;vertical-align:middle}
+.btn{background:var(--accent);color:#fff;border:none;padding:10px 14px;border-radius:12px;font-weight:700;cursor:pointer}
 .btn:disabled{opacity:.6;cursor:not-allowed}
 .hero{padding:40px 0 10px 0}
 .h1{font-size:38px;line-height:1.1;margin:0 0 10px 0;font-weight:800}

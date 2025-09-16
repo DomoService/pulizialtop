@@ -3,7 +3,6 @@ async function loadAgencies(){
   const res = await fetch('./data/agencies.json');
   const all = await res.json();
   window.__AGENCIES__ = all;
-  fillProvinces();
   render();
 }
 function getVal(id){return document.getElementById(id).value.trim()}
@@ -18,7 +17,7 @@ function render(){
   const root = document.getElementById('results');
   const all = window.__AGENCIES__ || [];
   const filtered = all.filter(a=>{
-    const text = (a.nome_commerciale+' '+a.ragione_sociale+' '+a.servizi_offerti.join(' ')+' '+a.comune+' '+a.provincia+' '+a.regione).toLowerCase();
+    const text = (a.nome_commerciale+' '+a.ragione_sociale+' '+(a.servizi_offerti||[]).join(' ')+' '+a.comune+' '+a.provincia+' '+a.regione).toLowerCase();
     if(q && !text.includes(q)) return false;
     if(regione && a.regione!==regione) return false;
     if(provincia && a.provincia!==provincia) return false;
@@ -34,7 +33,7 @@ function render(){
       <div class="meta">
         <div>⭐ ${a.rating.toFixed(1)} · ${a.recensioni} recensioni</div>
         <div>${a.fascia_prezzo}</div>
-        <div>${a.servizi_offerti.join(' · ')}</div>
+        <div>${(a.servizi_offerti||[]).join(' · ')}</div>
       </div>
       <div class="badges">
         <span class="badge">${a.regione}</span>
@@ -50,18 +49,7 @@ function render(){
 
   document.getElementById('count').innerText = filtered.length + ' agenzie';
 }
-function fillProvinces(){
-  const regione = getVal('regione');
-  const provSel = document.getElementById('provincia');
-  provSel.innerHTML = '<option value="">Provincia</option>';
-  const set = new Set((window.__AGENCIES__||[]).filter(a=>!regione || a.regione===regione).map(a=>a.provincia));
-  [...set].sort().forEach(p=>{
-    const opt = document.createElement('option'); opt.value=p; opt.textContent=p; provSel.appendChild(opt);
-  });
-  render();
-}
 document.addEventListener('DOMContentLoaded', ()=>{
   document.querySelectorAll('input,select').forEach(el => el.addEventListener('input', render));
-  document.getElementById('regione').addEventListener('change', ()=>{ fillProvinces(); });
   loadAgencies();
 });
