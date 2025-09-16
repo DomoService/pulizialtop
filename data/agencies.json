@@ -1,0 +1,49 @@
+[
+  {
+    "id": "ag001",
+    "ragione_sociale": "Pulizie Costa Rei S.r.l.",
+    "nome_commerciale": "Pulizie Costa Rei",
+    "piva_cf": "IT01234560901",
+    "telefono": "+39 070 0000001",
+    "email": "info@puliziecostarei.it",
+    "sito_web": "https://example.com",
+    "indirizzo": "Via dei Falchi 12",
+    "cap": "09043",
+    "comune": "Muravera",
+    "provincia": "SU",
+    "regione": "Sardegna",
+    "servizi_offerti": [
+      "Pulizie ordinarie",
+      "Fine locazione",
+      "Sanificazioni"
+    ],
+    "fascia_prezzo": "€€",
+    "rating": 4.6,
+    "recensioni": 34,
+    "latitudine": 39.256,
+    "longitudine": 9.576
+  },
+  {
+    "id": "ag002",
+    "ragione_sociale": "Manutenzioni Gallura di Merello Stefano",
+    "nome_commerciale": "Gallura Manutenzioni",
+    "piva_cf": "IT02345670902",
+    "telefono": "+39 0789 000002",
+    "email": "contatti@galluramanutenzioni.it",
+    "sito_web": "https://example.com",
+    "indirizzo": "Via La Marmora 8",
+    "cap": "07028",
+    "comune": "Santa Teresa Gallura",
+    "provincia": "SS",
+    "regione": "Sardegna",
+    "servizi_offerti": [
+      "Manutenzioni",
+      "Giardinaggio"
+    ],
+    "fascia_prezzo": "€€",
+    "rating": 4.8,
+    "recensioni": 18,
+    "latitudine": 41.242,
+    "longitudine": 9.188
+  }
+]
