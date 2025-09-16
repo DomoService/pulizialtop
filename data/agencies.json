@@ -1,0 +1,118 @@
+[
+  {
+    "id": "ag001",
+    "ragione_sociale": "Pulizie Costa Rei S.r.l.",
+    "nome_commerciale": "Pulizie Costa Rei",
+    "piva_cf": "IT01234560901",
+    "telefono": "+39 070 0000001",
+    "email": "info@puliziecostarei.it",
+    "sito_web": "https://example.com",
+    "indirizzo": "Via dei Falchi 12",
+    "cap": "09043",
+    "comune": "Muravera",
+    "provincia": "SU",
+    "regione": "Sardegna",
+    "servizi_offerti": [
+      "Pulizie ordinarie",
+      "Fine locazione",
+      "Sanificazioni"
+    ],
+    "fascia_prezzo": "€€",
+    "rating": 4.6,
+    "recensioni": 34,
+    "latitudine": 39.256,
+    "longitudine": 9.576
+  },
+  {
+    "id": "ag002",
+    "ragione_sociale": "Manutenzioni Gallura di Merello Stefano",
+    "nome_commerciale": "Gallura Manutenzioni",
+    "piva_cf": "IT02345670902",
+    "telefono": "+39 0789 000002",
+    "email": "contatti@galluramanutenzioni.it",
+    "sito_web": "https://example.com",
+    "indirizzo": "Via La Marmora 8",
+    "cap": "07028",
+    "comune": "Santa Teresa Gallura",
+    "provincia": "SS",
+    "regione": "Sardegna",
+    "servizi_offerti": [
+      "Manutenzioni",
+      "Giardinaggio"
+    ],
+    "fascia_prezzo": "€€",
+    "rating": 4.8,
+    "recensioni": 18,
+    "latitudine": 41.242,
+    "longitudine": 9.188
+  },
+  {
+    "id": "ag003",
+    "ragione_sociale": "Impresa Pulizie Cagliari di Ibiscus Laura",
+    "nome_commerciale": "Ibiscus Pulizie",
+    "piva_cf": "IT03456780903",
+    "telefono": "+39 070 0000003",
+    "email": "laura@ibiscuspulizie.it",
+    "sito_web": "https://example.com",
+    "indirizzo": "Via Garibaldi 21",
+    "cap": "09125",
+    "comune": "Cagliari",
+    "provincia": "CA",
+    "regione": "Sardegna",
+    "servizi_offerti": [
+      "Pulizie ordinarie",
+      "Check-out pulizie"
+    ],
+    "fascia_prezzo": "€",
+    "rating": 4.2,
+    "recensioni": 12,
+    "latitudine": 39.218,
+    "longitudine": 9.122
+  },
+  {
+    "id": "ag004",
+    "ragione_sociale": "Blue Living Services",
+    "nome_commerciale": "Blue Living",
+    "piva_cf": "IT04567890904",
+    "telefono": "+39 070 0000004",
+    "email": "info@blueliving.it",
+    "sito_web": "https://example.com",
+    "indirizzo": "Viale Diaz 100",
+    "cap": "09126",
+    "comune": "Cagliari",
+    "provincia": "CA",
+    "regione": "Sardegna",
+    "servizi_offerti": [
+      "Pulizie",
+      "Manutenzioni"
+    ],
+    "fascia_prezzo": "€€€",
+    "rating": 4.9,
+    "recensioni": 56,
+    "latitudine": 39.22,
+    "longitudine": 9.135
+  },
+  {
+    "id": "ag005",
+    "ragione_sociale": "SoleLuna Pulizie",
+    "nome_commerciale": "SoleLuna",
+    "piva_cf": "IT05678900905",
+    "telefono": "+39 070 0000005",
+    "email": "contatti@soleluna.it",
+    "sito_web": "https://example.com",
+    "indirizzo": "Via Roma 50",
+    "cap": "09124",
+    "comune": "Cagliari",
+    "provincia": "CA",
+    "regione": "Sardegna",
+    "servizi_offerti": [
+      "Pulizie ordinarie",
+      "Fine locazione"
+    ],
+    "fascia_prezzo": "€€",
+    "rating": 4.0,
+    "recensioni": 8,
+    "latitudine": 39.216,
+    "longitudine": 9.109
+  }
+]
