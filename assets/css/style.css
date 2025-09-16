@@ -1,0 +1,10 @@
+
+:root{--bg:#0b1324;--card:#121b33;--text:#e9edf5;--muted:#9fb0d0;--accent:#0052cc;--accent2:#ff6600}
+body{margin:0;font-family:system-ui,Arial;background:#0b1324;color:var(--text)}
+.container{max-width:1100px;margin:0 auto;padding:24px}
+.nav{display:flex;align-items:center;justify-content:space-between;padding:16px 0}
+.brand img{height:28px}
+.btn{background:var(--accent2);color:#fff;border:none;padding:10px 14px;border-radius:12px;font-weight:700;cursor:pointer}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.card{background:var(--card);padding:16px;border-radius:16px}
+.footer{color:var(--muted);padding:30px 0;font-size:14px;text-align:center}
