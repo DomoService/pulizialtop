@@ -3,6 +3,14 @@ async function loadAgencies(){
   const res = await fetch('./data/agencies.json');
   const all = await res.json();
   window.__AGENCIES__ = all;
+  const province = [...new Set(all.map(a => a.provincia))].sort();
+  const select = document.getElementById('provincia');
+  province.forEach(provincia => {
+    const option = document.createElement('option');
+    option.value = provincia;
+    option.textContent = provincia;
+    select.appendChild(option);
+  });
   render();
 }
 function getVal(id){return document.getElementById(id).value.trim()}
@@ -23,7 +31,7 @@ function render(){
     if(provincia && a.provincia!==provincia) return false;
     if(comune && a.comune.toLowerCase()!==comune.toLowerCase()) return false;
     if(prezzo && a.fascia_prezzo!==prezzo) return false;
-    if(!isNaN(minRating) && a.rating < minRating) return false;
+    if(minRating > 0 && (!Number.isFinite(a.rating) || a.rating < minRating)) return false;
     return true;
   });
 
@@ -31,8 +39,8 @@ function render(){
     <div class="card">
       <h3>${a.nome_commerciale} <small class="muted">— ${a.comune} (${a.provincia})</small></h3>
       <div class="meta">
-        <div>⭐ ${a.rating.toFixed(1)} · ${a.recensioni} recensioni</div>
-        <div>${a.fascia_prezzo}</div>
+        <div>⭐ ${Number.isFinite(a.rating) ? a.rating.toFixed(1) + ' · ' + a.recensioni + ' recensioni' : 'Recensioni non disponibili'}</div>
+        <div>${a.fascia_prezzo || 'Prezzo su preventivo'}</div>
         <div>${(a.servizi_offerti||[]).join(' · ')}</div>
       </div>
       <div class="badges">
@@ -41,9 +49,12 @@ function render(){
         <span class="badge">${a.provincia}</span>
       </div>
       <div style="margin-top:10px">
-        <a class="btn" href="mailto:${a.email}?subject=Richiesta informazioni">Contatta</a>
+        ${a.email ? `<a class="btn" href="mailto:${a.email}?subject=Richiesta informazioni">Contatta</a>` : ''}
+        ${a.telefono ? `<a class="btn" href="tel:${a.telefono.replace(/\s/g, '')}">Chiama</a>` : ''}
+        ${a.fonte ? `<a class="btn" href="${a.sito_web}" target="_blank" rel="noopener noreferrer">Sito ufficiale</a>` : ''}
         <a class="btn" href="#" onclick="alert('Form recensione in arrivo!');return false;">Lascia recensione</a>
       </div>
+      ${a.fonte ? `<p class="muted">Dati dal sito ufficiale · verificati il ${a.data_verifica}</p>` : ''}
     </div>
   `).join('');
 
