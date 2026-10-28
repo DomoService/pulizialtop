@@ -31,8 +31,8 @@ function render(){
     <div class="card">
       <h3>${a.nome_commerciale} <small class="muted">— ${a.comune} (${a.provincia})</small></h3>
       <div class="meta">
-        <div>⭐ ${a.rating.toFixed(1)} · ${a.recensioni} recensioni</div>
-        <div>${a.fascia_prezzo}</div>
+        <div>⭐ ${Number.isFinite(a.rating) ? a.rating.toFixed(1) + ' · ' + a.recensioni + ' recensioni' : 'Recensioni non disponibili'}</div>
+        <div>${a.fascia_prezzo || ''}</div>
         <div>${(a.servizi_offerti||[]).join(' · ')}</div>
       </div>
       <div class="badges">
@@ -41,13 +41,14 @@ function render(){
         <span class="badge">${a.provincia}</span>
       </div>
       <div style="margin-top:10px">
-        <a class="btn" href="mailto:${a.email}?subject=Richiesta informazioni">Contatta</a>
+        <a class="btn" href="${a.email ? 'mailto:' + a.email + '?subject=Richiesta informazioni' : a.sito_web}">Contatta</a>
         <a class="btn" href="#" onclick="alert('Form recensione in arrivo!');return false;">Lascia recensione</a>
       </div>
     </div>
   `).join('');
 
-  document.getElementById('count').innerText = filtered.length + ' agenzie';
+  const count = document.getElementById('count');
+  if(count) count.innerText = filtered.length + ' agenzie';
 }
 document.addEventListener('DOMContentLoaded', ()=>{
   document.querySelectorAll('input,select').forEach(el => el.addEventListener('input', render));
