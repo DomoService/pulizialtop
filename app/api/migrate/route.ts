@@ -1,16 +1,6 @@
-import { runMigration } from "@/lib/supabase/migrate"
 import { NextResponse } from "next/server"
 
+// Database migrations must run outside HTTP requests, with operator approval.
 export async function GET() {
-  try {
-    const result = await runMigration()
-
-    if (result.success) {
-      return NextResponse.json({ message: "Migration completed successfully" })
-    } else {
-      return NextResponse.json({ error: result.error }, { status: 500 })
-    }
-  } catch (error) {
-    return NextResponse.json({ error: "Migration failed" }, { status: 500 })
-  }
+  return NextResponse.json({ error: "Migrazioni via web disabilitate" }, { status: 410 })
 }

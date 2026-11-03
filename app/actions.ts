@@ -1,5 +1,6 @@
 "use server"
 
+import { requireAdmin, requireAgencyAccess, isAdmin } from "@/lib/access"
 import { getSupabaseServerClient } from "@/lib/supabase/server"
 
 export interface Agency {
@@ -43,7 +44,7 @@ export async function getAgencies(filters?: {
   console.log("[v0] Fetching agencies with filters:", filters)
   const supabase = await getSupabaseServerClient()
 
-  let query = supabase.from("agencies").select("*").order("google_rating", { ascending: false, nullsLast: true })
+  let query = supabase.from("agencies").select("agency_id,nome,tipo,province_id,indirizzo,cap,telefono,email,website,partita_iva,google_rating,google_reviews,descrizione,image_url,logo_url").order("google_rating", { ascending: false, nullsLast: true })
 
   if (filters?.type && filters.type !== "tutti") {
     query = query.eq("tipo", filters.type)
@@ -115,6 +116,7 @@ export async function getAgencies(filters?: {
 
 export async function getAgencyReviews(agencyId: string) {
   const supabase = await getSupabaseServerClient()
+  await requireAgencyAccess(supabase, Number(agencyId))
 
   const { data, error } = await supabase
     .from("reviews")
@@ -134,8 +136,8 @@ export async function getApprovedReviews(agencyId: number) {
   const supabase = await getSupabaseServerClient()
 
   const { data, error } = await supabase
-    .from("reviews")
-    .select("*")
+    .from("public_agency_reviews")
+    .select("id,agency_id,reviewer_name,rating,comment,status,created_at,reviewed_at,company_response,company_response_date")
     .eq("agency_id", agencyId)
     .eq("status", "approved")
     .order("created_at", { ascending: false })
@@ -172,6 +174,7 @@ export async function submitReview(formData: FormData) {
 
 export async function getPendingReviews() {
   const supabase = await getSupabaseServerClient()
+  await requireAdmin(supabase)
 
   const { data, error } = await supabase
     .from("reviews")
@@ -192,6 +195,7 @@ export async function getPendingReviews() {
 
 export async function moderateReview(reviewId: number, status: "approved" | "rejected") {
   const supabase = await getSupabaseServerClient()
+  await requireAdmin(supabase)
 
   console.log("[v0] Moderating review:", reviewId, "to status:", status)
 
@@ -251,7 +255,7 @@ async function updateAgencyRating(agencyId: number) {
 export async function getAgencyByToken(token: string) {
   const supabase = await getSupabaseServerClient()
 
-  const { data, error } = await supabase.from("agencies").select("*").eq("review_token", token).single()
+  const { data, error } = await supabase.from("agencies").select("agency_id,nome,tipo,province_id,indirizzo,cap,telefono,email,website,partita_iva,google_rating,google_reviews,descrizione,image_url,logo_url").eq("review_token", token).single()
 
   if (error || !data) {
     return null
@@ -300,6 +304,7 @@ export async function submitReviewWithToken(formData: FormData) {
 
 export async function createReviewInvitation(formData: FormData) {
   const supabase = await getSupabaseServerClient()
+  await requireAgencyAccess(supabase, Number(formData.get("agency_id")))
 
   const invitationData = {
     agency_id: Number.parseInt(formData.get("agency_id") as string),
@@ -320,6 +325,7 @@ export async function createReviewInvitation(formData: FormData) {
 
 export async function getAgencyInvitations(agencyId: number) {
   const supabase = await getSupabaseServerClient()
+  await requireAgencyAccess(supabase, Number(agencyId))
 
   const { data, error } = await supabase
     .from("review_invitations")
@@ -387,6 +393,12 @@ export async function submitReviewFromInvitation(formData: FormData) {
 
 export async function addCompanyResponse(reviewId: number, response: string) {
   const supabase = await getSupabaseServerClient()
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  if (authError || !user?.email_confirmed_at) throw new Error("Accesso non autorizzato")
+  const { data: review } = await supabase.from("reviews").select("agency_id").eq("id", reviewId).single()
+  if (!review) return { success: false, error: "Recensione non disponibile" }
+  await requireAgencyAccess(supabase, review.agency_id)
+
 
   const { error } = await supabase
     .from("reviews")
@@ -407,7 +419,7 @@ export async function addCompanyResponse(reviewId: number, response: string) {
 export async function getAgencyById(agencyId: number) {
   const supabase = await getSupabaseServerClient()
 
-  const { data, error } = await supabase.from("agencies").select("*").eq("agency_id", agencyId).single()
+  const { data, error } = await supabase.from("agencies").select("agency_id,nome,tipo,province_id,indirizzo,cap,telefono,email,website,partita_iva,google_rating,google_reviews,descrizione,image_url,logo_url").eq("agency_id", agencyId).single()
 
   if (error || !data) {
     return null
@@ -425,106 +437,43 @@ export async function getAgencyById(agencyId: number) {
   } as Agency
 }
 
-export async function generateAgencyCredentials(agencyId: number) {
+export async function generateAgencyCredentials(_agencyId: number) {
   const supabase = await getSupabaseServerClient()
-
-  const tempPassword = Math.random().toString(36).slice(-8).toUpperCase()
-
-  const { error } = await supabase
-    .from("agencies")
-    .update({
-      temp_password: tempPassword,
-      is_claimed: false,
-    })
-    .eq("agency_id", agencyId)
-
-  if (error) {
-    return { success: false, error: error.message }
-  }
-
-  return { success: true, password: tempPassword }
+  await requireAdmin(supabase)
+  return { success: false, password: undefined, error: "Credenziali temporanee disabilitate: configura un account Supabase Auth confermato per l'email dell'agenzia." }
 }
 
 export async function generateAllCredentials() {
   const supabase = await getSupabaseServerClient()
-
-  const { data: agencies } = await supabase.from("agencies").select("agency_id, email").not("email", "is", null)
-
-  if (!agencies) return { success: false }
-
-  const credentials = []
-
-  for (const agency of agencies) {
-    const result = await generateAgencyCredentials(agency.agency_id)
-    if (result.success) {
-      credentials.push({
-        agency_id: agency.agency_id,
-        email: agency.email,
-        password: result.password,
-      })
-    }
-  }
-
-  return { success: true, credentials }
+  await requireAdmin(supabase)
+  return { success: false, credentials: [], error: "Credenziali temporanee disabilitate: usa Supabase Auth." }
 }
 
 export async function loginAgency(email: string, password: string) {
   const supabase = await getSupabaseServerClient()
-
-  const { data, error } = await supabase
-    .from("agencies")
-    .select("*")
-    .eq("email", email)
-    .eq("temp_password", password)
-    .single()
-
-  if (error || !data) {
-    return { success: false, error: "Credenziali non valide" }
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+  if (error || !data.user?.email_confirmed_at || !data.user.email) {
+    await supabase.auth.signOut()
+    return { success: false, error: "Usa un account Supabase Auth confermato associato all'email dell'agenzia." }
   }
-
-  await supabase
-    .from("agencies")
-    .update({
-      last_login: new Date().toISOString(),
-      is_claimed: true,
-    })
-    .eq("agency_id", data.agency_id)
-
-  return { success: true, agency: data }
+  const { data: agencies, error: agencyError } = await supabase.from("agencies")
+    .select("agency_id").ilike("email", data.user.email.replace(/[\\%_]/g, "\\$&"))
+  if (agencyError || agencies?.length !== 1) {
+    await supabase.auth.signOut()
+    return { success: false, error: "Account non associato a una sola agenzia. Contatta l'amministratore." }
+  }
+  return { success: true, agency: agencies[0] }
 }
 
 export async function changeAgencyPassword(agencyId: number, newPassword: string) {
   const supabase = await getSupabaseServerClient()
-
-  const { error } = await supabase.from("agencies").update({ temp_password: newPassword }).eq("agency_id", agencyId)
-
-  if (error) {
-    return { success: false, error: error.message }
-  }
-
-  return { success: true }
+  await requireAgencyAccess(supabase, agencyId)
+  const { error } = await supabase.auth.updateUser({ password: newPassword })
+  return error ? { success: false, error: error.message } : { success: true }
 }
 
-export async function registerAdmin(formData: FormData) {
-  const supabase = await getSupabaseServerClient()
-
-  const email = formData.get("email") as string
-  const password = formData.get("password") as string
-
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      emailRedirectTo:
-        process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${process.env.NEXT_PUBLIC_SUPABASE_URL}/admin/recensioni`,
-    },
-  })
-
-  if (error) {
-    return { success: false, error: error.message }
-  }
-
-  return { success: true, data }
+export async function registerAdmin(_formData: FormData) {
+  return { success: false, error: "La registrazione amministratori è disabilitata. Contatta il titolare del sito." }
 }
 
 export async function loginAdmin(formData: FormData) {
@@ -540,6 +489,11 @@ export async function loginAdmin(formData: FormData) {
 
   if (error) {
     return { success: false, error: "Credenziali non valide" }
+  }
+
+  if (!isAdmin(data.user)) {
+    await supabase.auth.signOut()
+    return { success: false, error: "Accesso riservato agli amministratori" }
   }
 
   return { success: true, data }
@@ -607,6 +561,7 @@ export async function submitAgencyRegistration(formData: FormData) {
 
 export async function addNewAgency(formData: FormData) {
   const supabase = await getSupabaseServerClient()
+  await requireAdmin(supabase)
 
   console.log("[v0] Starting addNewAgency")
 
@@ -688,6 +643,7 @@ export async function addNewAgency(formData: FormData) {
 
 export async function updateAgency(formData: FormData) {
   const supabase = await getSupabaseServerClient()
+  await requireAdmin(supabase)
 
   const agencyId = Number.parseInt(formData.get("agency_id") as string)
   const provinceName = formData.get("provincia") as string
@@ -751,6 +707,7 @@ export async function updateAgency(formData: FormData) {
 
 export async function deleteAgency(agencyId: number) {
   const supabase = await getSupabaseServerClient()
+  await requireAdmin(supabase)
 
   await supabase.from("reviews").delete().eq("agency_id", agencyId)
 
@@ -766,4 +723,14 @@ export async function deleteAgency(agencyId: number) {
   }
 
   return { success: true }
+}
+
+export async function getAdminAgencyLinks() {
+  const supabase = await getSupabaseServerClient()
+  await requireAdmin(supabase)
+  const agencies = await getAgencies()
+  const { data, error } = await supabase.from("agencies").select("agency_id,review_token")
+  if (error) throw new Error("Impossibile leggere i link recensione")
+  const tokens = new Map(data.map(row => [row.agency_id, row.review_token]))
+  return agencies.map(agency => ({ ...agency, province: agency.province || "N/A", review_token: tokens.get(agency.agency_id) || null }))
 }

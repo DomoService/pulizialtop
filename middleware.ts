@@ -1,3 +1,4 @@
+import { isAdmin } from "@/lib/access"
 import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
 
@@ -37,7 +38,7 @@ export async function middleware(request: NextRequest) {
     request.nextUrl.pathname !== "/admin/password-dimenticata" &&
     request.nextUrl.pathname !== "/admin/nuova-password"
   ) {
-    if (!user) {
+    if (!isAdmin(user)) {
       const redirectUrl = request.nextUrl.clone()
       redirectUrl.pathname = "/admin/login"
       redirectUrl.searchParams.set("redirect", request.nextUrl.pathname)

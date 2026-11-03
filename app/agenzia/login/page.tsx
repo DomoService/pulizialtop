@@ -29,7 +29,6 @@ export default function AgencyLoginPage() {
     const result = await loginAgency(email, password)
 
     if (result.success && result.agency) {
-      localStorage.setItem("agency_id", result.agency.agency_id.toString())
       router.push(`/agenzia/${result.agency.agency_id}/dashboard`)
     } else {
       setError(result.error || "Credenziali non valide")
@@ -56,7 +55,7 @@ export default function AgencyLoginPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
-                <Input id="password" name="password" type="password" placeholder="Password temporanea" required />
+                <Input id="password" name="password" type="password" placeholder="Password del tuo account" required />
               </div>
 
               {error && <div className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{error}</div>}
@@ -67,7 +66,7 @@ export default function AgencyLoginPage() {
             </form>
 
             <div className="mt-6 text-center text-sm text-muted-foreground">
-              <p>Hai ricevuto le credenziali via email.</p>
+              <p>Usa un account confermato associato all’email della tua agenzia.</p>
               <p>Se hai problemi, contattaci a info@pulizialtop.it</p>
             </div>
           </Card>

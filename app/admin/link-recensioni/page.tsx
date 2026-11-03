@@ -1,10 +1,10 @@
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
-import { getAgencies } from "@/app/actions"
+import { getAdminAgencyLinks } from "@/app/actions"
 import { ReviewLinkCard } from "@/components/review-link-card"
 
 export default async function LinkRecensioniPage() {
-  const agencies = await getAgencies()
+  const agencies = await getAdminAgencyLinks()
 
   return (
     <div className="flex min-h-screen flex-col">
