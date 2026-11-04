@@ -16,6 +16,7 @@ export interface Agency {
   email: string | null
   website: string | null
   partita_iva: string | null
+  average_rating?: number | null
   google_rating: number | null
   google_reviews: number
   descrizione: string | null
@@ -45,7 +46,12 @@ export async function getAgencies(filters?: {
   console.log("[v0] Fetching agencies with filters:", filters)
   const supabase = await getSupabaseServerClient()
 
-  let query = supabase.from("agencies").select("agency_id,nome,tipo,province_id,indirizzo,cap,telefono,email,website,partita_iva,google_rating,google_reviews,descrizione,image_url,logo_url").order("google_rating", { ascending: false, nullsLast: true })
+  let query = supabase
+    .from("agencies")
+    .select(
+      "agency_id,nome,tipo,province_id,indirizzo,cap,telefono,email,website,partita_iva,google_rating,google_reviews,descrizione,image_url,logo_url"
+    )
+    .order("google_rating", { ascending: false, nullsFirst: false })
 
   if (filters?.type && filters.type !== "tutti") {
     query = query.eq("tipo", filters.type)
@@ -81,7 +87,9 @@ export async function getAgencies(filters?: {
     .select("province_id, nome")
     .in("province_id", provinceIds)
 
-  const provincesMap = new Map(provincesData?.map((p: any) => [p.province_id, p.nome]) || [])
+  const provincesMap = new Map(
+    provincesData?.map((p: any) => [p.province_id, p.nome]) || []
+  )
 
   const agencyIds = agenciesData.map((a: any) => a.agency_id)
   const { data: agencyServicesData } = await supabase
@@ -89,10 +97,17 @@ export async function getAgencies(filters?: {
     .select("agency_id, service_id")
     .in("agency_id", agencyIds)
 
-  const serviceIds = [...new Set(agencyServicesData?.map((as: any) => as.service_id) || [])]
-  const { data: servicesData } = await supabase.from("services").select("service_id, nome").in("service_id", serviceIds)
+  const serviceIds = [
+    ...new Set(agencyServicesData?.map((as: any) => as.service_id) || []),
+  ]
+  const { data: servicesData } = await supabase
+    .from("services")
+    .select("service_id, nome")
+    .in("service_id", serviceIds)
 
-  const servicesMap = new Map(servicesData?.map((s: any) => [s.service_id, s.nome]) || [])
+  const servicesMap = new Map(
+    servicesData?.map((s: any) => [s.service_id, s.nome]) || []
+  )
 
   const agencyServicesMap = new Map()
   agencyServicesData?.forEach((as: any) => {
@@ -138,7 +153,9 @@ export async function getApprovedReviews(agencyId: number) {
 
   const { data, error } = await supabase
     .from("public_agency_reviews")
-    .select("id,agency_id,reviewer_name,rating,comment,status,created_at,reviewed_at,company_response,company_response_date")
+    .select(
+      "id,agency_id,reviewer_name,rating,comment,status,created_at,reviewed_at,company_response,company_response_date"
+    )
     .eq("agency_id", agencyId)
     .eq("status", "approved")
     .order("created_at", { ascending: false })
@@ -154,7 +171,11 @@ export async function getApprovedReviews(agencyId: number) {
 export async function submitReview(formData: FormData) {
   const parsed = publicReviewSchema.safeParse(Object.fromEntries(formData))
   if (!parsed.success) {
-    return { success: false, error: "Controlla nome, email, valutazione (1–5) e commento (massimo 5000 caratteri)." }
+    return {
+      success: false,
+      error:
+        "Controlla nome, email, valutazione (1–5) e commento (massimo 5000 caratteri).",
+    }
   }
 
   try {
@@ -169,13 +190,20 @@ export async function submitReview(formData: FormData) {
     })
     if (error) {
       console.error("Public review submission failed", { code: error.code })
-      return { success: false, error: error.code === "P0001"
-        ? "Hai già inviato una recensione per questa agenzia di recente. Attendi 10 minuti prima di riprovare."
-        : "Non è stato possibile inviare la recensione. Riprova più tardi." }
+      return {
+        success: false,
+        error:
+          error.code === "P0001"
+            ? "Hai già inviato una recensione per questa agenzia di recente. Attendi 10 minuti prima di riprovare."
+            : "Non è stato possibile inviare la recensione. Riprova più tardi.",
+      }
     }
     return { success: true }
   } catch {
-    return { success: false, error: "Servizio temporaneamente non disponibile. Riprova più tardi." }
+    return {
+      success: false,
+      error: "Servizio temporaneamente non disponibile. Riprova più tardi.",
+    }
   }
 }
 
@@ -183,86 +211,55 @@ export async function getPendingReviews() {
   const supabase = await getSupabaseServerClient()
   await requireAdmin(supabase)
 
-  const { data, error } = await supabase
-    .from("reviews")
-    .select(`
-      *,
-      agencies (nome)
-    `)
-    .eq("status", "pending")
-    .order("created_at", { ascending: false })
-
-  if (error) {
-    console.error("[v0] Error fetching pending reviews:", error)
-    return []
-  }
-
-  return data
+  const { data, error } = await supabase.rpc("get_pending_legal_reviews")
+  if (error)
+    throw new Error(
+      "Registro moderazione non disponibile: verifica configurazione database"
+    )
+  return data || []
 }
 
-export async function moderateReview(reviewId: number, status: "approved" | "rejected") {
+export async function moderateReview(
+  reviewId: number,
+  status: "approved" | "rejected",
+  reason: string = ""
+) {
   const supabase = await getSupabaseServerClient()
   await requireAdmin(supabase)
-
-  console.log("[v0] Moderating review:", reviewId, "to status:", status)
-
-  const { data: reviewData } = await supabase
-    .from("reviews")
-    .select("agency_id")
-    .eq("id", reviewId)
-    .single()
-
-  const { error, data } = await supabase
-    .from("reviews")
-    .update({ status, reviewed_at: new Date().toISOString() })
-    .eq("id", reviewId)
-    .select()
-
-  if (error) {
-    console.error("[v0] Error moderating review:", error)
-    return { success: false, error: error.message }
-  }
-
-  console.log("[v0] Review moderated successfully:", data)
-
-  if (status === "approved" && reviewData) {
-    await updateAgencyRating(reviewData.agency_id)
-  }
-
-  return { success: true }
-}
-
-async function updateAgencyRating(agencyId: number) {
-  const supabase = await getSupabaseServerClient()
-
-  const { data: reviews } = await supabase
-    .from("reviews")
-    .select("rating")
-    .eq("agency_id", agencyId)
-    .eq("status", "approved")
-
-  if (!reviews || reviews.length === 0) {
-    return
-  }
-
-  const averageRating = reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
-  const roundedRating = Math.round(averageRating * 10) / 10
-
-  await supabase
-    .from("agencies")
-    .update({
-      google_rating: roundedRating,
-      google_reviews: reviews.length
-    })
-    .eq("agency_id", agencyId)
-
-  console.log("[v0] Updated agency rating:", { agencyId, rating: roundedRating, count: reviews.length })
+  if (
+    !Number.isSafeInteger(reviewId) ||
+    reviewId < 1 ||
+    !["approved", "rejected"].includes(status) ||
+    reason.trim().length < 10 ||
+    reason.length > 5000
+  )
+    return {
+      success: false,
+      error: "Indica una motivazione valida (10–5000 caratteri).",
+    }
+  const { error } = await supabase.rpc("moderate_legal_review", {
+    p_id: reviewId,
+    p_status: status,
+    p_reason: reason.trim(),
+  })
+  return error
+    ? {
+        success: false,
+        error: "Moderazione non riuscita: verifica i permessi e la migrazione.",
+      }
+    : { success: true }
 }
 
 export async function getAgencyByToken(token: string) {
   const supabase = await getSupabaseServerClient()
 
-  const { data, error } = await supabase.from("agencies").select("agency_id,nome,tipo,province_id,indirizzo,cap,telefono,email,website,partita_iva,google_rating,google_reviews,descrizione,image_url,logo_url").eq("review_token", token).single()
+  const { data, error } = await supabase
+    .from("agencies")
+    .select(
+      "agency_id,nome,tipo,province_id,indirizzo,cap,telefono,email,website,partita_iva,google_rating,google_reviews,descrizione,image_url,logo_url"
+    )
+    .eq("review_token", token)
+    .single()
 
   if (error || !data) {
     return null
@@ -284,7 +281,11 @@ export async function submitReviewWithToken(formData: FormData) {
   const supabase = await getSupabaseServerClient()
 
   const token = formData.get("review_token") as string
-  const { data: agency } = await supabase.from("agencies").select("agency_id").eq("review_token", token).single()
+  const { data: agency } = await supabase
+    .from("agencies")
+    .select("agency_id")
+    .eq("review_token", token)
+    .single()
 
   if (!agency) {
     return { success: false, error: "Link non valido" }
@@ -320,7 +321,9 @@ export async function createReviewInvitation(formData: FormData) {
     invitation_token: crypto.randomUUID(),
   }
 
-  const { error } = await supabase.from("review_invitations").insert(invitationData)
+  const { error } = await supabase
+    .from("review_invitations")
+    .insert(invitationData)
 
   if (error) {
     console.error("[v0] Error creating invitation:", error)
@@ -353,10 +356,12 @@ export async function getInvitationByToken(token: string) {
 
   const { data, error } = await supabase
     .from("review_invitations")
-    .select(`
+    .select(
+      `
       *,
       agencies (*)
-    `)
+    `
+    )
     .eq("invitation_token", token)
     .single()
 
@@ -386,47 +391,63 @@ export async function submitReviewFromInvitation(formData: FormData) {
     status: "pending" as const,
   }
 
-  const { data: review, error: reviewError } = await supabase.from("reviews").insert(reviewData).select().single()
+  const { data: review, error: reviewError } = await supabase
+    .from("reviews")
+    .insert(reviewData)
+    .select()
+    .single()
 
   if (reviewError) {
     console.error("[v0] Error submitting review:", reviewError)
     return { success: false, error: reviewError.message }
   }
 
-  await supabase.from("review_invitations").update({ reviewed: true }).eq("invitation_id", invitation.invitation_id)
+  await supabase
+    .from("review_invitations")
+    .update({ reviewed: true })
+    .eq("invitation_id", invitation.invitation_id)
 
   return { success: true }
 }
 
 export async function addCompanyResponse(reviewId: number, response: string) {
   const supabase = await getSupabaseServerClient()
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
-  if (authError || !user?.email_confirmed_at) throw new Error("Accesso non autorizzato")
-  const { data: review } = await supabase.from("reviews").select("agency_id").eq("id", reviewId).single()
-  if (!review) return { success: false, error: "Recensione non disponibile" }
-  await requireAgencyAccess(supabase, review.agency_id)
-
-
-  const { error } = await supabase
-    .from("reviews")
-    .update({
-      company_response: response,
-      company_response_date: new Date().toISOString(),
-    })
-    .eq("id", reviewId)
-
-  if (error) {
-    console.error("[v0] Error adding company response:", error)
-    return { success: false, error: error.message }
-  }
-
-  return { success: true }
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser()
+  if (error || !user?.email_confirmed_at)
+    throw new Error("Accesso non autorizzato")
+  if (
+    !Number.isSafeInteger(reviewId) ||
+    reviewId < 1 ||
+    !response.trim() ||
+    response.length > 2000
+  )
+    return { success: false, error: "Risposta non valida" }
+  const { error: writeError } = await supabase.rpc("respond_legal_review", {
+    p_id: reviewId,
+    p_response: response.trim(),
+  })
+  return writeError
+    ? {
+        success: false,
+        error:
+          "Risposta non salvata: verifica proprietà dell’agenzia e configurazione.",
+      }
+    : { success: true }
 }
 
 export async function getAgencyById(agencyId: number) {
   const supabase = await getSupabaseServerClient()
 
-  const { data, error } = await supabase.from("agencies").select("agency_id,nome,tipo,province_id,indirizzo,cap,telefono,email,website,partita_iva,google_rating,google_reviews,descrizione,image_url,logo_url").eq("agency_id", agencyId).single()
+  const { data, error } = await supabase
+    .from("agencies")
+    .select(
+      "agency_id,nome,tipo,province_id,indirizzo,cap,telefono,email,website,partita_iva,google_rating,google_reviews,descrizione,image_url,logo_url"
+    )
+    .eq("agency_id", agencyId)
+    .single()
 
   if (error || !data) {
     return null
@@ -447,32 +468,57 @@ export async function getAgencyById(agencyId: number) {
 export async function generateAgencyCredentials(_agencyId: number) {
   const supabase = await getSupabaseServerClient()
   await requireAdmin(supabase)
-  return { success: false, password: undefined, error: "Credenziali temporanee disabilitate: configura un account Supabase Auth confermato per l'email dell'agenzia." }
+  return {
+    success: false,
+    password: undefined,
+    error:
+      "Credenziali temporanee disabilitate: configura un account Supabase Auth confermato per l'email dell'agenzia.",
+  }
 }
 
 export async function generateAllCredentials() {
   const supabase = await getSupabaseServerClient()
   await requireAdmin(supabase)
-  return { success: false, credentials: [], error: "Credenziali temporanee disabilitate: usa Supabase Auth." }
+  return {
+    success: false,
+    credentials: [],
+    error: "Credenziali temporanee disabilitate: usa Supabase Auth.",
+  }
 }
 
 export async function loginAgency(email: string, password: string) {
   const supabase = await getSupabaseServerClient()
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  })
   if (error || !data.user?.email_confirmed_at || !data.user.email) {
     await supabase.auth.signOut()
-    return { success: false, error: "Usa un account Supabase Auth confermato associato all'email dell'agenzia." }
+    return {
+      success: false,
+      error:
+        "Usa un account Supabase Auth confermato associato all'email dell'agenzia.",
+    }
   }
-  const { data: agencies, error: agencyError } = await supabase.from("agencies")
-    .select("agency_id").ilike("email", data.user.email.replace(/[\\%_]/g, "\\$&"))
+  const { data: agencies, error: agencyError } = await supabase
+    .from("agencies")
+    .select("agency_id")
+    .ilike("email", data.user.email.replace(/[\\%_]/g, "\\$&"))
   if (agencyError || agencies?.length !== 1) {
     await supabase.auth.signOut()
-    return { success: false, error: "Account non associato a una sola agenzia. Contatta l'amministratore." }
+    return {
+      success: false,
+      error:
+        "Account non associato a una sola agenzia. Contatta l'amministratore.",
+    }
   }
   return { success: true, agency: agencies[0] }
 }
 
-export async function changeAgencyPassword(agencyId: number, newPassword: string) {
+export async function changeAgencyPassword(
+  agencyId: number,
+  newPassword: string
+) {
   const supabase = await getSupabaseServerClient()
   await requireAgencyAccess(supabase, agencyId)
   const { error } = await supabase.auth.updateUser({ password: newPassword })
@@ -480,7 +526,11 @@ export async function changeAgencyPassword(agencyId: number, newPassword: string
 }
 
 export async function registerAdmin(_formData: FormData) {
-  return { success: false, error: "La registrazione amministratori è disabilitata. Contatta il titolare del sito." }
+  return {
+    success: false,
+    error:
+      "La registrazione amministratori è disabilitata. Contatta il titolare del sito.",
+  }
 }
 
 export async function loginAdmin(formData: FormData) {
@@ -519,51 +569,25 @@ export async function logoutAdmin() {
 }
 
 export async function sendContactMessage(formData: FormData) {
-  const supabase = await getSupabaseServerClient()
-
-  const contactData = {
-    name: formData.get("name") as string,
-    email: formData.get("email") as string,
-    subject: formData.get("subject") as string,
-    message: formData.get("message") as string,
-    created_at: new Date().toISOString(),
-  }
-
-  // Crea tabella contact_messages se non esiste (da eseguire una volta su Supabase)
-  const { error } = await supabase.from("contact_messages").insert(contactData)
-
-  if (error) {
-    console.error("[v0] Error sending contact message:", error)
-    return { success: false, error: error.message }
-  }
-
-  return { success: true }
+  const { submitLegalRequest } = await import("@/app/legal-actions")
+  return submitLegalRequest({
+    kind: "contatto",
+    name: String(formData.get("name") || ""),
+    email: String(formData.get("email") || ""),
+    url: "",
+    message: `${formData.get("subject") || ""}\n${formData.get("message") || ""}`,
+    acknowledged: formData.has("privacy_consent"),
+    goodFaith: false,
+    website: String(formData.get("website") || ""),
+  })
 }
-
 export async function submitAgencyRegistration(formData: FormData) {
-  const supabase = await getSupabaseServerClient()
-
-  const registrationData = {
-    agency_name: formData.get("agency_name") as string,
-    contact_name: formData.get("contact_name") as string,
-    email: formData.get("email") as string,
-    phone: formData.get("phone") as string,
-    province: formData.get("province") as string,
-    services: formData.get("services") as string,
-    message: formData.get("message") as string,
-    status: "pending",
-    created_at: new Date().toISOString(),
-  }
-
-  // Crea tabella agency_registrations se non esiste (da eseguire una volta su Supabase)
-  const { error } = await supabase.from("agency_registrations").insert(registrationData)
-
-  if (error) {
-    console.error("[v0] Error submitting registration:", error)
-    return { success: false, error: error.message }
-  }
-
-  return { success: true }
+  const { submitRegistration } = await import("@/app/legal-actions")
+  return submitRegistration({
+    ...Object.fromEntries(formData),
+    terms: formData.get("terms") === "on",
+    privacy: formData.get("privacy") === "on",
+  })
 }
 
 export async function addNewAgency(formData: FormData) {
@@ -608,11 +632,16 @@ export async function addNewAgency(formData: FormData) {
 
     if (uploadError) {
       console.error("[v0] Error uploading logo:", uploadError)
-      return { success: false, error: `Errore durante il caricamento del logo: ${uploadError.message}` }
+      return {
+        success: false,
+        error: `Errore durante il caricamento del logo: ${uploadError.message}`,
+      }
     }
 
     console.log("[v0] Upload successful, getting public URL")
-    const { data: urlData } = supabase.storage.from("agency-logos").getPublicUrl(fileName)
+    const { data: urlData } = supabase.storage
+      .from("agency-logos")
+      .getPublicUrl(fileName)
     logoUrl = urlData.publicUrl
     console.log("[v0] Public URL:", logoUrl)
   }
@@ -684,7 +713,9 @@ export async function updateAgency(formData: FormData) {
       return { success: false, error: "Errore durante il caricamento del logo" }
     }
 
-    const { data: urlData } = supabase.storage.from("agency-logos").getPublicUrl(fileName)
+    const { data: urlData } = supabase.storage
+      .from("agency-logos")
+      .getPublicUrl(fileName)
     logoUrl = urlData.publicUrl
   }
 
@@ -702,7 +733,10 @@ export async function updateAgency(formData: FormData) {
     updateData.logo_url = logoUrl
   }
 
-  const { error } = await supabase.from("agencies").update(updateData).eq("agency_id", agencyId)
+  const { error } = await supabase
+    .from("agencies")
+    .update(updateData)
+    .eq("agency_id", agencyId)
 
   if (error) {
     console.error("[v0] Error updating agency:", error)
@@ -722,7 +756,10 @@ export async function deleteAgency(agencyId: number) {
 
   await supabase.from("review_invitations").delete().eq("agency_id", agencyId)
 
-  const { error } = await supabase.from("agencies").delete().eq("agency_id", agencyId)
+  const { error } = await supabase
+    .from("agencies")
+    .delete()
+    .eq("agency_id", agencyId)
 
   if (error) {
     console.error("[v0] Error deleting agency:", error)
@@ -736,8 +773,14 @@ export async function getAdminAgencyLinks() {
   const supabase = await getSupabaseServerClient()
   await requireAdmin(supabase)
   const agencies = await getAgencies()
-  const { data, error } = await supabase.from("agencies").select("agency_id,review_token")
+  const { data, error } = await supabase
+    .from("agencies")
+    .select("agency_id,review_token")
   if (error) throw new Error("Impossibile leggere i link recensione")
-  const tokens = new Map(data.map(row => [row.agency_id, row.review_token]))
-  return agencies.map(agency => ({ ...agency, province: agency.province || "N/A", review_token: tokens.get(agency.agency_id) || null }))
+  const tokens = new Map(data.map((row) => [row.agency_id, row.review_token]))
+  return agencies.map((agency) => ({
+    ...agency,
+    province: agency.province || "N/A",
+    review_token: tokens.get(agency.agency_id) || null,
+  }))
 }

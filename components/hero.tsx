@@ -2,7 +2,13 @@
 
 import { Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 
@@ -28,14 +34,19 @@ export function Hero() {
             Trova l'Agenzia di Pulizie Perfetta per Te
           </h1>
           <p className="mt-6 text-pretty text-lg text-muted-foreground leading-relaxed">
-            Confronta le migliori agenzie di pulizie e manutentori in Sardegna. Valutazioni reali, recensioni
-            certificate da clienti verificati. Per aziende, privati e professionisti del settore immobiliare.
+            Confronta le migliori agenzie di pulizie e manutentori in Sardegna.
+            Valutazioni e recensioni con moderazione editoriale, non verifica
+            dell’acquisto. Per aziende, privati e professionisti del settore
+            immobiliare.
           </p>
 
           <div className="mt-10 mx-auto max-w-2xl">
             <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4 shadow-lg md:flex-row md:items-end">
               <div className="flex-1">
-                <label htmlFor="service" className="mb-2 block text-sm font-medium text-card-foreground">
+                <label
+                  htmlFor="service"
+                  className="mb-2 block text-sm font-medium text-card-foreground"
+                >
                   Tipo di Servizio
                 </label>
                 <Select value={serviceType} onValueChange={setServiceType}>
@@ -52,7 +63,10 @@ export function Hero() {
               </div>
 
               <div className="flex-1">
-                <label htmlFor="provincia" className="mb-2 block text-sm font-medium text-card-foreground">
+                <label
+                  htmlFor="provincia"
+                  className="mb-2 block text-sm font-medium text-card-foreground"
+                >
                   Provincia
                 </label>
                 <Select value={province} onValueChange={setProvince}>

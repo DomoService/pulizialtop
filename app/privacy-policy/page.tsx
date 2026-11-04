@@ -1,116 +1,207 @@
-import { Header } from "@/components/header"
-import { Footer } from "@/components/footer"
-import type { Metadata } from "next"
-
-export const metadata: Metadata = {
-  alternates: { canonical: "https://pulizialtop.it/privacy-policy" },
+import Link from "next/link"
+import { LegalPage, LegalSection, Missing } from "@/components/legal-page"
+import { getLegalSettings } from "@/lib/legal/data"
+import { LEGAL_VERSION, missingLegalFields } from "@/lib/legal/schema"
+export const metadata = {
   title: "Privacy Policy",
-  description: "Informativa sulla privacy di PuliziAlTop - Come trattiamo i tuoi dati personali",
+  alternates: { canonical: "https://pulizialtop.it/privacy-policy" },
 }
-
-export default function PrivacyPolicyPage() {
+export default async function Page() {
+  const { settings: s } = await getLegalSettings()
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-      <main className="flex-1 container mx-auto px-4 py-16 max-w-4xl">
-        <h1 className="text-4xl font-bold mb-8">Privacy Policy</h1>
-        
-        <div className="prose prose-blue max-w-none space-y-6 text-muted-foreground">
-          <section>
-            <h2 className="text-2xl font-semibold text-foreground mb-4">1. Titolare del Trattamento</h2>
-            <p>
-              Il Titolare del trattamento dei dati è Barbara Massa, contattabile all'indirizzo email: info@pulizialtop.it
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold text-foreground mb-4">2. Tipologie di Dati Raccolti</h2>
-            <p>
-              PuliziAlTop raccoglie i seguenti dati personali:
-            </p>
-            <ul className="list-disc pl-6 space-y-2">
-              <li>Dati di navigazione (indirizzo IP, tipo di browser, pagine visitate)</li>
-              <li>Dati forniti volontariamente dall'utente (nome, email, telefono) tramite form di contatto o registrazione</li>
-              <li>Cookie tecnici e di profilazione (vedi Cookie Policy)</li>
-            </ul>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold text-foreground mb-4">3. Finalità del Trattamento</h2>
-            <p>I dati personali sono trattati per le seguenti finalità:</p>
-            <ul className="list-disc pl-6 space-y-2">
-              <li>Fornire i servizi richiesti dall'utente</li>
-              <li>Gestire richieste di contatto e supporto</li>
-              <li>Migliorare l'esperienza utente e le funzionalità del sito</li>
-              <li>Analisi statistiche anonime sul traffico del sito</li>
-              <li>Invio di comunicazioni informative (previo consenso)</li>
-            </ul>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold text-foreground mb-4">4. Base Giuridica del Trattamento</h2>
-            <p>
-              Il trattamento dei dati è basato sul consenso dell'utente (art. 6, par. 1, lett. a GDPR) 
-              e sull'esecuzione di un contratto o misure precontrattuali (art. 6, par. 1, lett. b GDPR).
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold text-foreground mb-4">5. Conservazione dei Dati</h2>
-            <p>
-              I dati personali sono conservati per il tempo necessario a fornire i servizi richiesti 
-              e per adempiere agli obblighi di legge. Successivamente, i dati vengono cancellati o anonimizzati.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold text-foreground mb-4">6. Diritti dell'Interessato</h2>
-            <p>L'utente ha diritto di:</p>
-            <ul className="list-disc pl-6 space-y-2">
-              <li>Accedere ai propri dati personali</li>
-              <li>Rettificare dati inesatti o incompleti</li>
-              <li>Cancellare i propri dati (diritto all'oblio)</li>
-              <li>Limitare il trattamento dei dati</li>
-              <li>Opporsi al trattamento</li>
-              <li>Richiedere la portabilità dei dati</li>
-              <li>Revocare il consenso in qualsiasi momento</li>
-              <li>Proporre reclamo all'Autorità Garante per la protezione dei dati personali</li>
-            </ul>
-            <p className="mt-4">
-              Per esercitare i tuoi diritti, contatta: info@pulizialtop.it
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold text-foreground mb-4">7. Sicurezza dei Dati</h2>
-            <p>
-              PuliziAlTop adotta misure di sicurezza tecniche e organizzative per proteggere 
-              i dati personali da accessi non autorizzati, perdita, distruzione o divulgazione.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold text-foreground mb-4">8. Condivisione dei Dati</h2>
-            <p>
-              I dati personali non vengono venduti o ceduti a terze parti senza il consenso dell'utente, 
-              salvo obbligo di legge. Possono essere condivisi con fornitori di servizi tecnici 
-              (hosting, analytics) che operano in qualità di Responsabili del trattamento.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold text-foreground mb-4">9. Modifiche alla Privacy Policy</h2>
-            <p>
-              Questa Privacy Policy può essere aggiornata periodicamente. 
-              La versione aggiornata sarà pubblicata su questa pagina con indicazione della data di modifica.
-            </p>
-            <p className="mt-4">
-              <strong>Ultimo aggiornamento: 14 Novembre 2025</strong>
-            </p>
-          </section>
-        </div>
-      </main>
-      <Footer />
-    </div>
+    <LegalPage title="Privacy Policy">
+      <p>
+        Informativa ai sensi degli artt. 12, 13 e 14 GDPR. Versione{" "}
+        {LEGAL_VERSION}.{" "}
+        {missingLegalFields(s).length > 0 &&
+          "Bozza: informazioni del titolare e valutazioni da completare prima del rilascio definitivo. Non è una certificazione di conformità."}
+      </p>
+      <LegalSection title="Titolare, contatti e richieste">
+        <p>
+          Titolare:{" "}
+          <Missing value={s.controller} label="identità del titolare" />. Sede:{" "}
+          <Missing value={s.address} label="indirizzo" />. Contatto privacy:{" "}
+          <a
+            className="underline"
+            href={`mailto:${s.privacyContact || "info@pulizialtop.it"}`}
+          >
+            {s.privacyContact || "info@pulizialtop.it"}
+          </a>{" "}
+          (oggetto: Privacy). DPO o rappresentante, ove applicabili:{" "}
+          <Missing
+            value={s.dpo}
+            label="applicabilità e contatti DPO/rappresentante"
+          />
+          .
+        </p>
+        <p>
+          Puoi usare anche il{" "}
+          <Link className="underline" href="/segnala-un-problema?tipo=privacy">
+            modulo richieste privacy
+          </Link>
+          . Non inviare password, dati sanitari o copie integrali di documenti.
+          Eventuali verifiche d’identità saranno proporzionate alla richiesta.
+        </p>
+      </LegalSection>
+      <LegalSection title="Dati, finalità e basi giuridiche">
+        <ul className="list-disc pl-6 space-y-2">
+          <li>
+            Navigazione, log tecnici e sessioni Supabase: erogazione,
+            autenticazione e sicurezza. Esecuzione del servizio richiesto (art.
+            6.1.b); prevenzione abusi e sicurezza come interesse legittimo
+            (6.1.f), da documentare nel bilanciamento.
+          </li>
+          <li>
+            Richieste di contatto e registrazione: dati aziendali, referente,
+            email, telefono e messaggio per rispondere o valutare l’inserimento;
+            misure precontrattuali/servizio richiesto (6.1.b). Il referente non
+            è pubblicato automaticamente.
+          </li>
+          <li>
+            Recensioni: nome scelto, email privata, valutazione e testo.
+            Pubblicazione del contributo richiesto (6.1.b); moderazione, tutela
+            dei diritti e contrasto agli abusi (6.1.f); obblighi legali quando
+            applicabili (6.1.c). Il nome scelto e il testo possono essere
+            pubblici: non inserire dati di terzi non necessari.
+          </li>
+          <li>
+            Segnalazioni, reclami, correzioni e diritti: dati di contatto, URL,
+            motivazioni e decisioni; gestione della richiesta (6.1.b),
+            adempimenti applicabili GDPR/DSA (6.1.c), difesa dei diritti
+            (6.1.f).
+          </li>
+          <li>
+            Statistiche Vercel facoltative, se abilitate dal titolare: solo dopo
+            scelta dell’utente, su consenso (6.1.a). Nessuna iscrizione
+            marketing è attivata da questi moduli.
+          </li>
+        </ul>
+        <p>
+          Le basi giuridiche e il bilanciamento degli interessi devono essere
+          confermati dal titolare in base all’attività effettiva. I campi
+          contrassegnati come richiesti sono necessari per gestire la specifica
+          richiesta; gli altri sono facoltativi. La mancata comunicazione dei
+          dati necessari può impedire di rispondere, senza limitare la normale
+          consultazione.
+        </p>
+      </LegalSection>
+      <LegalSection title="Schede da fonti pubbliche: art. 14 GDPR">
+        <p>
+          Alcune schede possono essere inserite dalla piattaforma e non
+          costituiscono adesione o partnership. Fonti, categorie di dati e
+          bilanciamento:{" "}
+          <Missing
+            value={s.publicSources}
+            label="fonti effettive, dati aziendali e valutazione interesse legittimo"
+          />
+          . I dati pubblici non sono automaticamente riutilizzabili senza
+          limiti.
+        </p>
+        <p>
+          Quando applicabile, il titolare deve fornire l’informativa individuale
+          nei termini dell’art. 14 (entro un mese, oppure prima
+          comunicazione/divulgazione se precedente); eventuali esenzioni
+          richiedono una valutazione documentata. Questa pagina da sola non
+          sostituisce tale adempimento.
+        </p>
+      </LegalSection>
+      <LegalSection title="Destinatari, fornitori e trasferimenti">
+        <p>
+          Vercel ospita l’applicazione e tratta dati tecnici; Supabase fornisce
+          database, autenticazione e archiviazione immagini. Aruba gestisce DNS
+          e posta esistente. Vercel Web Analytics è opzionale. Cookiebot e
+          Google Analytics sono stati rimossi dal caricamento dell’app in questa
+          versione. Resend è in configurazione per future notifiche, non è
+          ancora integrato nell’invio applicativo.
+        </p>
+        <p>
+          Persone autorizzate possono gestire richieste e contenuti. Ruoli,
+          contratti art. 28, subfornitori e regioni effettive:{" "}
+          <Missing
+            value={s.suppliers}
+            label="elenco fornitori, ruoli e localizzazioni"
+          />
+          .
+        </p>
+        <p>
+          Trasferimenti extra SEE, eventuali decisioni di adeguatezza o garanzie
+          art. 46 e modalità per ottenerne copia:{" "}
+          <Missing
+            value={s.transfers}
+            label="verifica trasferimenti, SCC e misure supplementari"
+          />
+          . Non si presume che tutti i dati restino nell’UE.
+        </p>
+      </LegalSection>
+      <LegalSection title="Conservazione e sicurezza">
+        <p>
+          Account:{" "}
+          <Missing
+            value={s.retentionAccounts}
+            label="tempi o criteri account"
+          />
+          .
+        </p>
+        <p>
+          Recensioni:{" "}
+          <Missing
+            value={s.retentionReviews}
+            label="tempi o criteri recensioni"
+          />
+          .
+        </p>
+        <p>
+          Contatti, registrazioni, segnalazioni e richieste:{" "}
+          <Missing
+            value={s.retentionRequests}
+            label="tempi o criteri richieste"
+          />
+          .
+        </p>
+        <p>
+          Log e backup:{" "}
+          <Missing
+            value={s.retentionLogs}
+            label="tempi o criteri log e backup"
+          />
+          .
+        </p>
+        <p>
+          I criteri devono distinguere necessità operative, obblighi legali,
+          contenziosi e copie di backup. Non è attiva una cancellazione
+          automatica basata su questi testi. Accessi autorizzati, validazione e
+          policy riducono i rischi ma non garantiscono sicurezza assoluta;
+          l’audit di produzione resta necessario.
+        </p>
+      </LegalSection>
+      <LegalSection title="Diritti, riscontri e reclamo">
+        <p>
+          Nei casi e limiti previsti dagli artt. 15–22 GDPR puoi chiedere
+          accesso, rettifica, cancellazione, limitazione, portabilità e
+          opposizione. Puoi revocare il consenso senza pregiudicare i
+          trattamenti precedenti. Non tutte le richieste comportano
+          cancellazione immediata: vanno valutati obblighi di legge e diritti di
+          terzi.
+        </p>
+        <p>
+          Riscontro senza ingiustificato ritardo e di norma entro un mese, con
+          eventuale proroga motivata nei casi previsti dall’art. 12. Puoi
+          proporre reclamo al{" "}
+          <a className="underline" href="https://www.garanteprivacy.it">
+            Garante per la protezione dei dati personali
+          </a>{" "}
+          o rivolgerti all’autorità giudiziaria.
+        </p>
+        <p>
+          Non sono previsti dal codice processi decisionali esclusivamente
+          automatizzati con effetti giuridici: le decisioni di moderazione
+          richiedono intervento umano. Per i cookie e le preferenze consulta la{" "}
+          <Link className="underline" href="/cookie-policy">
+            Cookie Policy
+          </Link>
+          .
+        </p>
+      </LegalSection>
+    </LegalPage>
   )
 }

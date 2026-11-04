@@ -6,11 +6,15 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Star } from 'lucide-react'
-import { redirect } from 'next/navigation'
+import { Star } from "lucide-react"
+import { redirect } from "next/navigation"
 import Link from "next/link"
 
-export default async function InvitationReviewPage({ params }: { params: { token: string } }) {
+export default async function InvitationReviewPage({
+  params,
+}: {
+  params: { token: string }
+}) {
   const invitation = await getInvitationByToken(params.token)
 
   if (!invitation || invitation.reviewed) {
@@ -51,19 +55,30 @@ export default async function InvitationReviewPage({ params }: { params: { token
               <CardHeader>
                 <CardTitle>Lascia una Recensione</CardTitle>
                 <p className="text-sm text-muted-foreground">
-                  Sei stato invitato a recensire <strong>{invitation.agencies.nome}</strong>
+                  Sei stato invitato a recensire{" "}
+                  <strong>{invitation.agencies.nome}</strong>
                 </p>
               </CardHeader>
               <CardContent>
                 <form action={handleSubmit} className="space-y-6">
-                  <input type="hidden" name="invitation_token" value={params.token} />
+                  <input
+                    type="hidden"
+                    name="invitation_token"
+                    value={params.token}
+                  />
 
                   <div className="space-y-2">
                     <Label htmlFor="rating">Valutazione *</Label>
                     <div className="flex gap-2">
                       {[1, 2, 3, 4, 5].map((star) => (
                         <label key={star} className="cursor-pointer">
-                          <input type="radio" name="rating" value={star} required className="peer sr-only" />
+                          <input
+                            type="radio"
+                            name="rating"
+                            value={star}
+                            required
+                            className="peer sr-only"
+                          />
                           <Star className="h-8 w-8 text-gray-300 peer-checked:fill-yellow-400 peer-checked:text-yellow-400 hover:text-yellow-400 transition-colors" />
                         </label>
                       ))}
@@ -84,22 +99,36 @@ export default async function InvitationReviewPage({ params }: { params: { token
                   {/* GDPR informativa with checkbox */}
                   <div className="space-y-3 p-4 bg-muted/30 rounded-lg">
                     <p className="text-xs text-muted-foreground leading-relaxed">
-                      I dati inviati saranno trattati da Barbara Massa al solo scopo di pubblicare la recensione, secondo quanto indicato nella{' '}
-                      <Link href="/privacy-policy" className="text-primary underline">
+                      I dati inviati saranno trattati da Barbara Massa al solo
+                      scopo di pubblicare la recensione, secondo quanto indicato
+                      nella{" "}
+                      <Link
+                        href="/privacy-policy"
+                        className="text-primary underline"
+                      >
                         Privacy Policy
                       </Link>
                       .
                     </p>
                     <div className="flex items-start gap-2">
-                      <Checkbox id="privacy-consent" name="privacy_consent" required />
-                      <label htmlFor="privacy-consent" className="text-xs text-foreground leading-relaxed cursor-pointer">
-                        Ho letto l'informativa e acconsento al trattamento dei miei dati personali. *
+                      <Checkbox
+                        id="privacy-consent"
+                        name="privacy_consent"
+                        required
+                      />
+                      <label
+                        htmlFor="privacy-consent"
+                        className="text-xs text-foreground leading-relaxed cursor-pointer"
+                      >
+                        Ho letto l'informativa e acconsento al trattamento dei
+                        miei dati personali. *
                       </label>
                     </div>
                   </div>
 
                   <div className="rounded-lg bg-muted p-4 text-sm text-muted-foreground">
-                    La tua recensione sarà verificata prima della pubblicazione.
+                    La tua recensione sarà moderata prima della pubblicazione,
+                    senza certificazione dell’acquisto.
                   </div>
 
                   <Button type="submit" className="w-full" size="lg">

@@ -1,3 +1,5 @@
+import Link from "next/link"
+import { getAgencyProvenance } from "@/lib/legal/data"
 import type { Metadata } from "next"
 import { cache } from "react"
 import { agencyMetadata } from "@/lib/seo"
@@ -16,7 +18,11 @@ const getAgency = cache(async (id: string) => {
   return agencies.find((agency) => agency.agency_id === Number(id))
 })
 
-export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}): Promise<Metadata> {
   const agency = await getAgency((await params).id)
   if (!agency) notFound()
   return agencyMetadata(agency)
@@ -35,6 +41,7 @@ export default async function AgencyPage({
   }
 
   const reviews = await getApprovedReviews(agency.agency_id)
+  const source = await getAgencyProvenance(agency.agency_id)
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -45,12 +52,31 @@ export default async function AgencyPage({
             <div className="space-y-4">
               <Badge className="capitalize">{agency.tipo}</Badge>
               <h1 className="text-4xl font-bold">{agency.nome}</h1>
+              <p className="text-sm text-muted-foreground">
+                {source === "platform"
+                  ? "Scheda inserita dalla piattaforma da fonti aziendali: non implica adesione."
+                  : source === "registered"
+                    ? "Scheda registrata dall’impresa."
+                    : source === "claimed"
+                      ? "Profilo rivendicato: autorizzazione del gestore controllata, non certificazione del servizio."
+                      : "Provenienza della scheda non ancora documentata. La presenza non implica partnership o certificazione."}
+              </p>
+              <Link
+                className="text-sm underline"
+                href={`/segnala-un-problema?tipo=correzione-scheda&url=${encodeURIComponent(`https://www.pulizialtop.it/agenzia/${agency.agency_id}`)}`}
+              >
+                Correggi, rivendica o richiedi la rimozione della scheda
+              </Link>
 
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2">
                   <Star className="h-6 w-6 fill-yellow-400 text-yellow-400" />
-                  <span className="text-2xl font-bold">{agency.google_rating?.toFixed(1) || "N/A"}</span>
-                  <span className="text-muted-foreground">({agency.google_reviews} recensioni)</span>
+                  <span className="text-2xl font-bold">
+                    {agency.google_rating?.toFixed(1) || "N/A"}
+                  </span>
+                  <span className="text-muted-foreground">
+                    ({agency.google_reviews} recensioni)
+                  </span>
                 </div>
               </div>
 
@@ -66,7 +92,10 @@ export default async function AgencyPage({
                 {agency.telefono && (
                   <div className="flex items-center gap-2">
                     <Phone className="h-5 w-5" />
-                    <a href={`tel:${agency.telefono}`} className="hover:underline">
+                    <a
+                      href={`tel:${agency.telefono}`}
+                      className="hover:underline"
+                    >
                       {agency.telefono}
                     </a>
                   </div>
@@ -74,7 +103,10 @@ export default async function AgencyPage({
                 {agency.email && (
                   <div className="flex items-center gap-2">
                     <Mail className="h-5 w-5" />
-                    <a href={`mailto:${agency.email}`} className="hover:underline">
+                    <a
+                      href={`mailto:${agency.email}`}
+                      className="hover:underline"
+                    >
                       {agency.email}
                     </a>
                   </div>
@@ -82,18 +114,27 @@ export default async function AgencyPage({
                 {agency.website && (
                   <div className="flex items-center gap-2">
                     <Globe className="h-5 w-5" />
-                    <a href={agency.website} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                    <a
+                      href={agency.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:underline"
+                    >
                       {agency.website}
                     </a>
                   </div>
                 )}
               </div>
 
-              {agency.descrizione && <p className="text-lg leading-relaxed">{agency.descrizione}</p>}
+              {agency.descrizione && (
+                <p className="text-lg leading-relaxed">{agency.descrizione}</p>
+              )}
 
               {agency.servizi && agency.servizi.length > 0 && (
                 <div>
-                  <h3 className="mb-3 text-xl font-semibold">Servizi offerti</h3>
+                  <h3 className="mb-3 text-xl font-semibold">
+                    Servizi offerti
+                  </h3>
                   <div className="flex flex-wrap gap-2">
                     {agency.servizi.map((service, idx) => (
                       <Badge key={idx} variant="secondary">
@@ -111,7 +152,10 @@ export default async function AgencyPage({
             </div>
 
             <div id="scrivi-recensione">
-              <ReviewForm agencyId={agency.agency_id} agencyName={agency.nome} />
+              <ReviewForm
+                agencyId={agency.agency_id}
+                agencyName={agency.nome}
+              />
             </div>
           </div>
         </div>

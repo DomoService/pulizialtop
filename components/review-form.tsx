@@ -1,11 +1,18 @@
 "use client"
 
+import Link from "next/link"
 import { useState } from "react"
 import { Star } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { submitReview } from "@/app/actions"
 
@@ -43,7 +50,10 @@ export function ReviewForm({ agencyId, agencyName }: ReviewFormProps) {
     <Card>
       <CardHeader>
         <CardTitle>Lascia una recensione</CardTitle>
-        <CardDescription>Recensisci {agencyName}: la tua recensione sarà pubblicata dopo la nostra verifica</CardDescription>
+        <CardDescription>
+          Recensisci {agencyName}: la tua recensione sarà pubblicata dopo la
+          nostra verifica
+        </CardDescription>
       </CardHeader>
       <CardContent>
         {submitted ? (
@@ -56,12 +66,23 @@ export function ReviewForm({ agencyId, agencyName }: ReviewFormProps) {
 
             <div className="space-y-2">
               <Label htmlFor="reviewer_name">Nome</Label>
-              <Input id="reviewer_name" name="reviewer_name" maxLength={255} required />
+              <Input
+                id="reviewer_name"
+                name="reviewer_name"
+                maxLength={255}
+                required
+              />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="reviewer_email">Email</Label>
-              <Input id="reviewer_email" name="reviewer_email" type="email" maxLength={255} required />
+              <Input
+                id="reviewer_email"
+                name="reviewer_email"
+                type="email"
+                maxLength={255}
+                required
+              />
             </div>
 
             <div className="space-y-2">
@@ -81,25 +102,68 @@ export function ReviewForm({ agencyId, agencyName }: ReviewFormProps) {
                   >
                     <Star
                       className={`h-8 w-8 ${
-                        star <= (hoveredRating || rating) ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
+                        star <= (hoveredRating || rating)
+                          ? "fill-yellow-400 text-yellow-400"
+                          : "text-gray-300"
                       }`}
                     />
                   </button>
                 ))}
               </div>
               {rating === 0 && (
-                <p className="text-sm text-muted-foreground">Seleziona una valutazione da 1 a 5 stelle</p>
+                <p className="text-sm text-muted-foreground">
+                  Seleziona una valutazione da 1 a 5 stelle
+                </p>
               )}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="comment">Commento</Label>
-              <Textarea id="comment" name="comment" rows={4} maxLength={5000} placeholder="Racconta la tua esperienza..." required />
+              <Textarea
+                id="comment"
+                name="comment"
+                rows={4}
+                maxLength={5000}
+                placeholder="Racconta la tua esperienza..."
+                required
+              />
             </div>
 
-            {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
+            <p className="text-sm text-muted-foreground">
+              Il nome scelto sarà pubblico; l’email resterà riservata. Non
+              inserire dati di terzi. La moderazione non verifica l’acquisto.{" "}
+              <Link href="/regole-recensioni" className="underline">
+                Regole e contestazioni
+              </Link>
+            </p>
+            <label className="flex gap-2 text-sm">
+              <input type="checkbox" name="experience" required />
+              Dichiaro che la recensione si riferisce a una mia esperienza
+              autentica.
+            </label>
+            <label className="flex gap-2 text-sm">
+              <input type="checkbox" name="terms" required />
+              Accetto i{" "}
+              <Link href="/termini-e-condizioni" className="underline">
+                termini
+              </Link>{" "}
+              e ho letto la{" "}
+              <Link href="/privacy-policy" className="underline">
+                privacy
+              </Link>
+              .
+            </label>
+            {error && (
+              <p role="alert" className="text-sm text-red-600">
+                {error}
+              </p>
+            )}
 
-            <Button type="submit" disabled={isSubmitting || rating === 0} className="w-full">
+            <Button
+              type="submit"
+              disabled={isSubmitting || rating === 0}
+              className="w-full"
+            >
               {isSubmitting ? "Invio in corso..." : "Invia recensione"}
             </Button>
           </form>
