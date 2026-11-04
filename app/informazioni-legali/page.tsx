@@ -23,7 +23,6 @@ export default async function Page() {
             "fiscalCode",
             "register",
             "contact",
-            "dpo",
           ] as const
         ).map((k) => (
           <div key={k}>

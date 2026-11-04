@@ -40,8 +40,11 @@ in produzione effettuata. Questo aggiornamento integra la PR #5 già esistente.
 ## D. Informazioni mancanti
 
 IN ATTESA DI INFORMAZIONI:
-- CF se richiesto, Registro Imprese/REA se applicabili, eventuale DPO/rappresentante:
+- CF se richiesto, Registro Imprese/REA se applicabili ed eventuale rappresentante:
   indicare dati oppure non applicabilità motivata, non inventarli.
+- DPO: il titolare ha confermato che non è nominato. Le informative pubbliche non
+  indicano un DPO; il contatto per i diritti resta il titolare. Non si attesta
+  l’esenzione dall’art.37 GDPR: rivalutare al mutare dei trattamenti.
 - Criteri/tempi per account, recensioni, contatti/richieste, log e backup;
   approvazione titolare, eventuali obblighi legali e contenziosi.
 - Contratti/DPA, localizzazioni effettive Vercel/Supabase, subfornitori,

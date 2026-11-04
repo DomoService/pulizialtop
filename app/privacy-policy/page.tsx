@@ -27,12 +27,7 @@ export default async function Page() {
           >
             {s.privacyContact || "info@pulizialtop.it"}
           </a>{" "}
-          (oggetto: Privacy). DPO o rappresentante, ove applicabili:{" "}
-          <Missing
-            value={s.dpo}
-            label="applicabilità e contatti DPO/rappresentante"
-          />
-          .
+          (oggetto: Privacy).
         </p>
         <p>
           Puoi usare anche il{" "}

@@ -167,3 +167,9 @@ test("public review list omits private email, offers reporting and labels modera
   expect(html).toContain("Segnala o contesta")
   expect(html).toContain('id="recensione-1"')
 })
+
+test("absence of an appointed DPO is not an incomplete mandatory contact", () => {
+ const settings=legalSettingsSchema.parse({})
+ expect(settings.dpo).toBe("")
+ expect(missingLegalFields(settings).some(label=>label.startsWith("DPO"))).toBe(false)
+})
