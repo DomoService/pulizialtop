@@ -3,6 +3,32 @@
 -- Apply 003_public_reviews.sql separately if approved-review view is missing.
 BEGIN;
 SET LOCAL lock_timeout = '5s';
+
+-- Preserve the existing trigger's approved-only aggregation, qualifying every
+-- relation so it also works when called from the RPC's empty search_path.
+-- No stored review/agency rows are modified by CREATE OR REPLACE FUNCTION.
+CREATE OR REPLACE FUNCTION public.update_agency_rating()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = ''
+AS $trigger$
+BEGIN
+  UPDATE public.agencies
+  SET average_rating = (
+    SELECT ROUND(AVG(rating)::numeric, 1)
+    FROM public.reviews
+    WHERE agency_id = NEW.agency_id AND status = 'approved'
+  ),
+  google_reviews = (
+    SELECT COUNT(*)
+    FROM public.reviews
+    WHERE agency_id = NEW.agency_id AND status = 'approved'
+  )
+  WHERE agency_id = NEW.agency_id;
+  RETURN NEW;
+END;
+$trigger$;
+
 CREATE OR REPLACE FUNCTION public.submit_public_review(
  p_agency_id integer, p_reviewer_name text, p_reviewer_email text,
  p_rating integer, p_comment text

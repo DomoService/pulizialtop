@@ -86,6 +86,9 @@ Database operator checks before promotion:
 
 Local checks: run each `bun test tests/*.test.js` file in a separate process.
 The public-review tests mock the database; they do not prove the live SQL migration
-has been applied. The SQL was also exercised on an isolated PGlite schema fixture,
-without the real rating trigger. Database setup and actual successful writes remain
-operator verification steps. Do not report the live issue fixed before these pass.
+has been applied. The SQL was also exercised on an isolated PGlite schema fixture. After the operator
+supplied the rating trigger definition, the empty-search_path failure was reproduced
+and fixed by schema-qualifying its relations. With that trigger on the fixture,
+anonymous/authenticated pending submissions preserved the approved-only mean/count,
+and operator approval updated them. Migration reruns preserved existing rows.
+Actual successful writes on the deployed database remain operator verification steps. Do not report the live issue fixed before these pass.
