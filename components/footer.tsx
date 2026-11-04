@@ -1,8 +1,10 @@
 import { CookiePreferencesLink } from "@/components/cookie-preferences"
+import { getLegalSettings } from "@/lib/legal/data"
 import Link from "next/link"
 import { Mail, Phone } from "lucide-react"
 
-export function Footer() {
+export async function Footer() {
+  const { settings } = await getLegalSettings()
   return (
     <footer className="border-t border-border bg-muted/50">
       <div className="container mx-auto px-4 py-12">
@@ -128,6 +130,7 @@ export function Footer() {
               © PuliziAlTop – I diritti sui contenuti dei terzi restano ai
               rispettivi titolari.
             </p>
+            <p className="break-words">{settings.controller} — P. IVA {settings.vat}<br />{settings.address}</p>
             <div className="flex items-center justify-center gap-4 flex-wrap">
               <Link
                 href="/privacy-policy"
@@ -152,6 +155,8 @@ export function Footer() {
               <Link href="/segnala-un-problema" className="hover:underline">
                 Segnala un problema
               </Link>
+              <Link href="/diritti-privacy" className="hover:underline">Diritti Privacy</Link>
+              <Link href="/contattaci" className="hover:underline">Contatti</Link>
               <CookiePreferencesLink />
             </div>
           </div>

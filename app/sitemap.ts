@@ -41,6 +41,7 @@ export default async function sitemap() {
       priority: 0.6,
     },
     ...[
+      "diritti-privacy",
       "privacy-policy",
       "cookie-policy",
       "termini-e-condizioni",

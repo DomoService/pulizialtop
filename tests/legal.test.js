@@ -40,7 +40,7 @@ const request = {
 test("missing identity/retention stay explicit; optional analytics disabled by default", () => {
   const settings = legalSettingsSchema.parse({})
   expect(settings.analyticsEnabled).toBe(false)
-  expect(settings.controller).toBe("")
+  expect(settings.controller).toBe("Barbara Massa — ditta individuale")
   expect(missingLegalFields(settings)).toContain(
     "Criteri / tempi conservazione recensioni"
   )

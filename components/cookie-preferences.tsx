@@ -164,7 +164,7 @@ export function CookiePreferencesLink() {
       className="underline-offset-4 hover:underline"
       onClick={() => window.dispatchEvent(new Event("open-cookie-preferences"))}
     >
-      Preferenze Cookie
+      Gestisci preferenze cookie
     </button>
   )
 }

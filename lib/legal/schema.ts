@@ -21,9 +21,9 @@ export const legalFields = {
 } as const
 const contact = z.union([z.literal(""), z.string().trim().email().max(255)])
 export const legalSettingsSchema = z.object({
-  controller: text.default(""),
-  address: text.default(""),
-  vat: text.default(""),
+  controller: text.default("Barbara Massa — ditta individuale"),
+  address: text.default("Via Agostin di Castelvi 8, 09129 Cagliari"),
+  vat: text.default("03949710929"),
   fiscalCode: text.default(""),
   register: text.default(""),
   contact: contact.default("info@pulizialtop.it"),
