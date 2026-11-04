@@ -4,6 +4,7 @@ import { agencyMetadata } from "@/lib/seo"
 import { notFound } from "next/navigation"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
+import { ReviewForm } from "@/components/review-form"
 import { ReviewList } from "@/components/review-list"
 import { getAgencies, getApprovedReviews } from "@/app/actions"
 import { Star, MapPin, Phone, Mail, Globe } from "lucide-react"
@@ -107,6 +108,10 @@ export default async function AgencyPage({
             <div>
               <h2 className="mb-4 text-2xl font-bold">Recensioni</h2>
               <ReviewList reviews={reviews} />
+            </div>
+
+            <div id="scrivi-recensione">
+              <ReviewForm agencyId={agency.agency_id} agencyName={agency.nome} />
             </div>
           </div>
         </div>

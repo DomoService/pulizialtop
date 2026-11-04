@@ -19,18 +19,23 @@ export function ReviewForm({ agencyId, agencyName }: ReviewFormProps) {
   const [hoveredRating, setHoveredRating] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   async function handleSubmit(formData: FormData) {
+    if (isSubmitting) return
+    setError(null)
     setIsSubmitting(true)
-    const result = await submitReview(formData)
-    setIsSubmitting(false)
-
-    if (result.success) {
-      setSubmitted(true)
-      setTimeout(() => {
-        setSubmitted(false)
-        setRating(0)
-      }, 3000)
+    try {
+      const result = await submitReview(formData)
+      if (result.success) {
+        setSubmitted(true)
+      } else {
+        setError(result.error || "Invio non riuscito. Riprova più tardi.")
+      }
+    } catch {
+      setError("Invio non riuscito. Controlla la connessione e riprova.")
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -38,7 +43,7 @@ export function ReviewForm({ agencyId, agencyName }: ReviewFormProps) {
     <Card>
       <CardHeader>
         <CardTitle>Lascia una recensione</CardTitle>
-        <CardDescription>La tua recensione sarà pubblicata dopo la nostra verifica</CardDescription>
+        <CardDescription>Recensisci {agencyName}: la tua recensione sarà pubblicata dopo la nostra verifica</CardDescription>
       </CardHeader>
       <CardContent>
         {submitted ? (
@@ -51,12 +56,12 @@ export function ReviewForm({ agencyId, agencyName }: ReviewFormProps) {
 
             <div className="space-y-2">
               <Label htmlFor="reviewer_name">Nome</Label>
-              <Input id="reviewer_name" name="reviewer_name" required />
+              <Input id="reviewer_name" name="reviewer_name" maxLength={255} required />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="reviewer_email">Email</Label>
-              <Input id="reviewer_email" name="reviewer_email" type="email" required />
+              <Input id="reviewer_email" name="reviewer_email" type="email" maxLength={255} required />
             </div>
 
             <div className="space-y-2">
@@ -70,6 +75,8 @@ export function ReviewForm({ agencyId, agencyName }: ReviewFormProps) {
                     onClick={() => setRating(star)}
                     onMouseEnter={() => setHoveredRating(star)}
                     onMouseLeave={() => setHoveredRating(0)}
+                    aria-label={`${star} ${star === 1 ? "stella" : "stelle"}`}
+                    aria-pressed={rating === star}
                     className="transition-transform hover:scale-110"
                   >
                     <Star
@@ -87,8 +94,10 @@ export function ReviewForm({ agencyId, agencyName }: ReviewFormProps) {
 
             <div className="space-y-2">
               <Label htmlFor="comment">Commento</Label>
-              <Textarea id="comment" name="comment" rows={4} placeholder="Racconta la tua esperienza..." required />
+              <Textarea id="comment" name="comment" rows={4} maxLength={5000} placeholder="Racconta la tua esperienza..." required />
             </div>
+
+            {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
 
             <Button type="submit" disabled={isSubmitting || rating === 0} className="w-full">
               {isSubmitting ? "Invio in corso..." : "Invia recensione"}

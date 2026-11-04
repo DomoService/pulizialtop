@@ -56,3 +56,36 @@ Run the tests in separate processes because existing recovery tests mock shared 
 Verify unauthenticated rejection, non-admin rejection, admin access, matching/mismatched
 agency ownership and approved-review visibility in a test database/account. Do not
 interpret a missing table/view or permission-denied empty list as a successful data test.
+
+## Public review form repair
+
+The agency detail page now includes the review form. Submission validates all fields
+on the server and calls only `submit_public_review`, never a privileged client.
+Errors remain visible and success remains in the moderation-pending state.
+
+An operator must review and apply `scripts/004_submit_public_review.sql` in Supabase.
+It creates a tightly scoped SECURITY DEFINER function owned by postgres with an empty
+search_path. It validates inputs again, checks the agency, forces pending status,
+serializes and rejects repeated submissions for the same agency/email within ten
+minutes, and grants only EXECUTE to anon/authenticated. It does not reopen the base
+tables or change existing reviews. The cooldown is not full spam protection: add a
+verified CAPTCHA/rate-limiting service before accepting high-volume public traffic.
+The existing review trigger still runs with this write; verify its pending-review
+behavior in a test database before rollout. Do not bypass moderation or grant users
+UPDATE on agencies to make the trigger work.
+
+Database operator checks before promotion:
+- Apply 004 in a test database with the real trigger and confirm a valid submission
+  inserts one pending review without exposing reviewer_email or changing approved ratings.
+- Confirm invalid fields/unknown agencies and rapid repeated submissions are rejected.
+- Confirm anon/authenticated still cannot read private reviews or directly mutate tables.
+- Ensure 003's approved-only view exists for public display; 004 does not create it.
+- On the deployed preview, verify validation, five rating controls, visible errors,
+  and pending confirmation. A preview can share the production DB: do not create
+  synthetic reviews there. Use a separate test database for successful write tests.
+
+Local checks: run each `bun test tests/*.test.js` file in a separate process.
+The public-review tests mock the database; they do not prove the live SQL migration
+has been applied. The SQL was also exercised on an isolated PGlite schema fixture,
+without the real rating trigger. Database setup and actual successful writes remain
+operator verification steps. Do not report the live issue fixed before these pass.

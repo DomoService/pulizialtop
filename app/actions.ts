@@ -1,5 +1,6 @@
 "use server"
 
+import { publicReviewSchema } from "@/lib/public-review"
 import { requireAdmin, requireAgencyAccess, isAdmin } from "@/lib/access"
 import { getSupabaseServerClient } from "@/lib/supabase/server"
 
@@ -151,25 +152,31 @@ export async function getApprovedReviews(agencyId: number) {
 }
 
 export async function submitReview(formData: FormData) {
-  const supabase = await getSupabaseServerClient()
-
-  const reviewData = {
-    agency_id: Number.parseInt(formData.get("agency_id") as string),
-    reviewer_name: formData.get("reviewer_name") as string,
-    reviewer_email: formData.get("reviewer_email") as string,
-    rating: Number.parseInt(formData.get("rating") as string),
-    comment: formData.get("comment") as string,
-    status: "pending" as const,
+  const parsed = publicReviewSchema.safeParse(Object.fromEntries(formData))
+  if (!parsed.success) {
+    return { success: false, error: "Controlla nome, email, valutazione (1–5) e commento (massimo 5000 caratteri)." }
   }
 
-  const { error } = await supabase.from("reviews").insert(reviewData)
-
-  if (error) {
-    console.error("[v0] Error submitting review:", error)
-    return { success: false, error: error.message }
+  try {
+    const supabase = await getSupabaseServerClient()
+    // No direct table grants or service-role key: the DB function can only insert pending reviews.
+    const { error } = await supabase.rpc("submit_public_review", {
+      p_agency_id: parsed.data.agency_id,
+      p_reviewer_name: parsed.data.reviewer_name,
+      p_reviewer_email: parsed.data.reviewer_email,
+      p_rating: parsed.data.rating,
+      p_comment: parsed.data.comment,
+    })
+    if (error) {
+      console.error("Public review submission failed", { code: error.code })
+      return { success: false, error: error.code === "P0001"
+        ? "Hai già inviato una recensione per questa agenzia di recente. Attendi 10 minuti prima di riprovare."
+        : "Non è stato possibile inviare la recensione. Riprova più tardi." }
+    }
+    return { success: true }
+  } catch {
+    return { success: false, error: "Servizio temporaneamente non disponibile. Riprova più tardi." }
   }
-
-  return { success: true }
 }
 
 export async function getPendingReviews() {
