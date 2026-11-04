@@ -1,0 +1,17 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+Allow: /agenzia/*
+Allow: /chi-siamo
+Allow: /come-funziona
+Allow: /per-agenzie
+Allow: /contattaci
+Allow: /registrazione-agenzia
+
+Disallow: /admin/*
+Disallow: /api/*
+Disallow: /recensione/*
+Disallow: /invito/*
+Disallow: /agenzia/*/dashboard
+
+Sitemap: https://pulizialtop.it/sitemap.xml
