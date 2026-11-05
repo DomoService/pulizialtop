@@ -22,6 +22,10 @@ const nextConfig = {
   },
   async headers() {
     return [
+      ...["/admin/:path*", "/agenzia/:id/dashboard", "/agenzia/login"].map(source => ({
+        source,
+        headers: [{ key: "Cache-Control", value: "private, no-store, max-age=0" }],
+      })),
       {
         source: "/:path*",
         headers: [

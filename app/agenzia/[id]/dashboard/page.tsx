@@ -9,6 +9,9 @@ import { Footer } from "@/components/footer"
 import { getAgencyById, getAgencyInvitations } from "@/app/actions"
 import { InvitationForm, InvitationsList } from "@/components/invitation-form"
 
+// Authorization must run on every request, never from a shared rendered cache.
+export const dynamic = "force-dynamic"
+
 export default async function AgencyDashboardPage({
   params,
 }: {

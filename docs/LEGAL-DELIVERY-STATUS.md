@@ -70,3 +70,28 @@ DA IMPLEMENTARE / VERIFICARE prima di pubblicazione definitiva:
 
 Nessuna affermazione «conforme al 100%»; non pubblicare questa bozza con segnaposto.
 Per inventario, fonti primarie e dettagli: LEGAL-COMPLIANCE-REPORT.md.
+
+## Aggiornamento verifiche — 5 novembre 2026
+
+Esiti riferiti dall'operatore sull'ambiente separato pulizialtop-test e preview:
+- RPC richiesta privacy, RLS admin/ordinario, gestione decisioni e rollback test SQL.
+- Form richiesta privacy e registrazione, consultazione e decisioni nel pannello.
+- Recensione fittizia pending non pubblica, approvazione con 4 stelle/conteggio 1,
+  segnalazione senza rimozione automatica e risposta dell'impresa visibile.
+- Accesso admin rifiutato all'utente ordinario. Accesso dashboard anonimo corretto
+  da errore server a redirect login, verificato autonomamente in browser.
+- Utente ordinario: login agenzia rifiutato; screenshot dashboard successivo ritirato
+  come prova dall'operatore (errore di finestra/sessione). Accesso diretto con sessione
+  ordinaria non verificato end-to-end: nessuna conclusione di fuga dati da quello screenshot.
+
+Verifiche automatiche: guardie testate con cambio sessione proprietario -> utente
+non proprietario -> anonimo; nessuna autorizzazione riutilizzata tra le chiamate.
+Dashboard force-dynamic e header no-store predisposti per pagine riservate; non
+sono un sostituto dell'autorizzazione o una cancellazione di pagine già in memoria.
+Log del 5 novembre confermano errore Accesso non autorizzato digest 3037010450
+sulla vecchia preview, non un'autorizzazione concessa dal server.
+
+Problema separato rilevato nei log: lettura review_invitations negata da RLS/grant,
+mascherata dal vecchio codice come lista vuota. Non concedere SELECT indiscriminato.
+La gestione inviti completa richiede RPC/policy dedicate e test proprietario/terzi;
+non è stata completata in questo aggiornamento. Produzione non modificata.
