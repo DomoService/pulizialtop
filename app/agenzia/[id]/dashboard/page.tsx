@@ -1,8 +1,9 @@
 import Link from "next/link"
+import { redirect, notFound } from "next/navigation"
 import { CompanyReviewResponse } from "@/components/company-review-response"
 import { getApprovedReviews } from "@/app/actions"
 import { getSupabaseServerClient } from "@/lib/supabase/server"
-import { requireAgencyAccess } from "@/lib/access"
+import { requireAgencyAccess, AgencyAccessDenied } from "@/lib/access"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { getAgencyById, getAgencyInvitations } from "@/app/actions"
@@ -14,7 +15,13 @@ export default async function AgencyDashboardPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  await requireAgencyAccess(await getSupabaseServerClient(), Number(id))
+  if (!/^[1-9]\d*$/.test(id) || !Number.isSafeInteger(Number(id))) notFound()
+  try {
+    await requireAgencyAccess(await getSupabaseServerClient(), Number(id))
+  } catch (error) {
+    if (error instanceof AgencyAccessDenied) redirect("/agenzia/login?accesso=negato")
+    throw error
+  }
   const agency = await getAgencyById(Number.parseInt(id))
   const invitations = await getAgencyInvitations(Number.parseInt(id))
   const reviews = await getApprovedReviews(Number(id))

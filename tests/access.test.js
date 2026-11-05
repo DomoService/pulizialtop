@@ -1,5 +1,5 @@
 import { expect, test, mock } from "bun:test"
-import { isAdmin, requireAdmin, requireAgencyAccess } from "../lib/access"
+import { isAdmin, requireAdmin, requireAgencyAccess, AgencyAccessDenied } from "../lib/access"
 
 const owner = { id: "owner", email: "owner@example.test", email_confirmed_at: "2026-01-01", app_metadata: {} }
 const admin = { ...owner, app_metadata: { role: "admin" } }
@@ -30,4 +30,9 @@ test("agency access validates identity, ownership, and IDs", async () => {
   await expect(requireAgencyAccess(client(owner), NaN)).rejects.toThrow()
   await expect(requireAgencyAccess(client(owner), 1)).resolves.toBe(owner)
   await expect(requireAgencyAccess(client(admin, "other@example.test"), 1)).resolves.toBe(admin)
+})
+
+test("expected agency rejection has a distinct error type for page navigation", async () => {
+  await expect(requireAgencyAccess(client(null), 1)).rejects.toBeInstanceOf(AgencyAccessDenied)
+  await expect(requireAgencyAccess(client(owner, "other@example.test"), 1)).rejects.toBeInstanceOf(AgencyAccessDenied)
 })
