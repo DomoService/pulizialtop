@@ -357,62 +357,27 @@ export async function getAgencyInvitations(agencyId: number) {
 }
 
 export async function getInvitationByToken(token: string) {
+  if (!z.string().uuid().safeParse(token).success) return null
   const supabase = await getSupabaseServerClient()
-
-  const { data, error } = await supabase
-    .from("review_invitations")
-    .select(
-      `
-      *,
-      agencies (*)
-    `
-    )
-    .eq("invitation_token", token)
-    .single()
-
-  if (error || !data) {
-    return null
-  }
-
-  return data
+  const { data, error } = await supabase.rpc("get_public_invitation", {p_token:token})
+  if (error) throw new Error("Servizio inviti temporaneamente non disponibile")
+  return data as {agency_name:string,reviewed:boolean} | null
 }
 
 export async function submitReviewFromInvitation(formData: FormData) {
-  const supabase = await getSupabaseServerClient()
-
-  const token = formData.get("invitation_token") as string
-  const invitation = await getInvitationByToken(token)
-
-  if (!invitation || invitation.reviewed) {
-    return { success: false, error: "Invito non valido o già utilizzato" }
-  }
-
-  const reviewData = {
-    agency_id: invitation.agency_id,
-    reviewer_name: invitation.customer_name,
-    reviewer_email: invitation.customer_email,
-    rating: Number.parseInt(formData.get("rating") as string),
-    comment: formData.get("comment") as string,
-    status: "pending" as const,
-  }
-
-  const { data: review, error: reviewError } = await supabase
-    .from("reviews")
-    .insert(reviewData)
-    .select()
-    .single()
-
-  if (reviewError) {
-    console.error("[v0] Error submitting review:", reviewError)
-    return { success: false, error: reviewError.message }
-  }
-
-  await supabase
-    .from("review_invitations")
-    .update({ reviewed: true })
-    .eq("invitation_id", invitation.invitation_id)
-
-  return { success: true }
+  const parsed=z.object({
+    invitation_token:z.string().uuid(),
+    rating:z.string().regex(/^[1-5]$/).transform(Number),
+    comment:z.string().trim().min(1).max(5000),
+    public_name:z.string().trim().min(1).max(255),
+    experience:z.literal("on"),terms:z.literal("on"),
+  }).safeParse(Object.fromEntries(formData))
+  if(!parsed.success)return {success:false,error:"Controlla nome pubblico, stelle, commento e dichiarazioni."}
+  try {
+    const supabase=await getSupabaseServerClient()
+    const {error}=await supabase.rpc("submit_invited_review",{p_token:parsed.data.invitation_token,p_rating:parsed.data.rating,p_comment:parsed.data.comment,p_public_name:parsed.data.public_name})
+    return error?{success:false,error:"Invito non disponibile, già utilizzato o invio troppo recente. Riprova più tardi."}:{success:true}
+  } catch { return {success:false,error:"Invio non disponibile. Riprova più tardi."} }
 }
 
 export async function addCompanyResponse(reviewId: number, response: string) {
