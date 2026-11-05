@@ -6,17 +6,23 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Mail, Copy } from "lucide-react"
 import { createReviewInvitation } from "@/app/actions"
-import { useRef } from "react"
+import { useRef, useState } from "react"
 
 export function InvitationForm({ agencyId }: { agencyId: number }) {
   const formRef = useRef<HTMLFormElement>(null)
 
+  const [error,setError] = useState("")
+  const [busy,setBusy] = useState(false)
   async function handleSubmit(formData: FormData) {
-    const result = await createReviewInvitation(formData)
-    if (result.success) {
-      alert(`Link generato! Copialo e invialo al cliente:\n${window.location.origin}/invito/${result.token}`)
-      formRef.current?.reset()
-    }
+    setBusy(true);setError("")
+    try {
+      const result = await createReviewInvitation(formData)
+      if (result.success) {
+        alert(`Link generato, nessuna email inviata. L’accesso pubblico al link deve essere verificato prima di inviarlo a clienti:\n${window.location.origin}/invito/${result.token}`)
+        formRef.current?.reset()
+      } else setError(result.error || "Invito non creato")
+    } catch { setError("Invito non creato. Verifica accesso e configurazione.") }
+    finally {setBusy(false)}
   }
 
   return (
@@ -44,7 +50,9 @@ export function InvitationForm({ agencyId }: { agencyId: number }) {
               placeholder="mario.rossi@email.com"
             />
           </div>
-          <Button type="submit" className="w-full">
+          {error && <p role="alert">{error}</p>}
+          <p className="text-xs text-muted-foreground">La generazione non invia email. Usa solo dati che puoi trattare lecitamente e informa il cliente. Nei test usa dati fittizi.</p>
+          <Button type="submit" disabled={busy} className="w-full">
             Genera Link Recensione
           </Button>
         </form>
@@ -57,7 +65,7 @@ export function InvitationsList({ invitations }: { invitations: any[] }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Inviti Inviati ({invitations.length})</CardTitle>
+        <CardTitle>Inviti creati ({invitations.length})</CardTitle>
       </CardHeader>
       <CardContent>
         {invitations.length === 0 ? (

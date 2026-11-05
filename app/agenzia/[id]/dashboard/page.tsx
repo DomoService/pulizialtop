@@ -26,7 +26,10 @@ export default async function AgencyDashboardPage({
     throw error
   }
   const agency = await getAgencyById(Number.parseInt(id))
-  const invitations = await getAgencyInvitations(Number.parseInt(id))
+  let invitations: any[] = []
+  let invitationsAvailable = true
+  try { invitations = await getAgencyInvitations(Number.parseInt(id)) }
+  catch { invitationsAvailable = false }
   const reviews = await getApprovedReviews(Number(id))
 
   if (!agency) {
@@ -69,7 +72,8 @@ export default async function AgencyDashboardPage({
               ))}
             </section>
             <InvitationForm agencyId={agency.agency_id} />
-            <InvitationsList invitations={invitations} />
+            {invitationsAvailable ? <InvitationsList invitations={invitations} /> :
+              <p role="alert">Elenco inviti non disponibile. Non significa che non esistano inviti: verifica i permessi del database.</p>}
           </div>
         </div>
       </main>

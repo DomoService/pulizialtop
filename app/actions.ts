@@ -1,5 +1,6 @@
 "use server"
 
+import { z } from "zod"
 import { publicReviewSchema } from "@/lib/public-review"
 import { requireAdmin, requireAgencyAccess, isAdmin } from "@/lib/access"
 import { getSupabaseServerClient } from "@/lib/supabase/server"
@@ -314,10 +315,14 @@ export async function createReviewInvitation(formData: FormData) {
   const supabase = await getSupabaseServerClient()
   await requireAgencyAccess(supabase, Number(formData.get("agency_id")))
 
+  const parsed = z.object({
+    customer_name: z.string().trim().min(1).max(255),
+    customer_email: z.string().trim().email().max(255),
+  }).safeParse(Object.fromEntries(formData))
+  if (!parsed.success) return {success:false,error:"Controlla nome ed email del cliente."}
   const invitationData = {
-    agency_id: Number.parseInt(formData.get("agency_id") as string),
-    customer_email: formData.get("customer_email") as string,
-    customer_name: formData.get("customer_name") as string,
+    agency_id: Number(formData.get("agency_id")),
+    ...parsed.data,
     invitation_token: crypto.randomUUID(),
   }
 
@@ -327,7 +332,7 @@ export async function createReviewInvitation(formData: FormData) {
 
   if (error) {
     console.error("[v0] Error creating invitation:", error)
-    return { success: false, error: error.message }
+    return { success: false, error: "Invito non creato. Verifica autorizzazione e configurazione del database." }
   }
 
   return { success: true, token: invitationData.invitation_token }
@@ -339,13 +344,13 @@ export async function getAgencyInvitations(agencyId: number) {
 
   const { data, error } = await supabase
     .from("review_invitations")
-    .select("*")
+    .select("invitation_id,agency_id,customer_name,customer_email,invitation_token,sent_at,reviewed")
     .eq("agency_id", agencyId)
     .order("sent_at", { ascending: false })
 
   if (error) {
     console.error("[v0] Error fetching invitations:", error)
-    return []
+    throw new Error("Elenco inviti non disponibile")
   }
 
   return data
