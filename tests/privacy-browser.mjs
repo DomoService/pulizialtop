@@ -69,6 +69,39 @@ try {
   await technical.getByRole('button',{name:'Preferenze cookie',exact:true}).click()
   assert.equal(await technical.getByRole('checkbox').count(),0,'no unused optional category')
   await technical.close()
-  console.log(`PASS consent browser ${viewport.width}x${viewport.height}: first visit, refusal, selective opt-in, accept, private route, revoke, cleanup, X, Escape, technical only`)
+  for(const raw of ['broken',JSON.stringify({version:1,analytics:true,expires:1})]) {
+    const bad=await browser.newContext({viewport})
+    await bad.addInitScript(raw=>localStorage.setItem('pulizialtop-consent-v1',raw),raw)
+    const p=await bad.newPage();let requests=0
+    await p.route('**/_vercel/insights/**',r=>{requests++;return r.abort()})
+    await p.goto(origin);await p.getByRole('dialog').waitFor()
+    assert.equal(requests,0);await bad.close()
+  }
+  const blocked=await browser.newContext({viewport})
+  await blocked.addInitScript(()=>{Object.defineProperty(Storage.prototype,'setItem',{value(){throw new DOMException('Blocked','SecurityError')}})})
+  const blockedPage=await blocked.newPage();let deniedRequests=0
+  await blockedPage.route('**/_vercel/insights/**',r=>{deniedRequests++;return r.abort()})
+  await blockedPage.goto(origin);await blockedPage.getByRole('dialog').waitFor()
+  await blockedPage.getByRole('button',{name:'Accetta tutti',exact:true}).click()
+  await blockedPage.waitForTimeout(150)
+  assert.equal(deniedRequests,0,'blocked persistence cannot enable optional tracking')
+  await blockedPage.getByRole('button',{name:'Preferenze cookie',exact:true}).click()
+  await blockedPage.getByRole('status').waitFor()
+  assert.equal(await blockedPage.getByRole('checkbox').isChecked(),false)
+  await blocked.close()
+  const revokeBlocked=await browser.newContext({viewport})
+  await revokeBlocked.addInitScript(()=>{
+    const key='pulizialtop-consent-v1'
+    if(!localStorage.getItem(key)) localStorage.setItem(key,JSON.stringify({version:1,analytics:true,expires:Date.now()+86400000}))
+    Object.defineProperty(Storage.prototype,'setItem',{value(){throw new DOMException('Blocked','SecurityError')}})
+  })
+  const rev=await revokeBlocked.newPage()
+  await rev.route('**/_vercel/insights/**',r=>r.fulfill({status:200,body:'/* isolated */'}))
+  await rev.goto(origin);await rev.waitForFunction(()=>window.vaq?.length>0)
+  await rev.getByRole('button',{name:'Preferenze cookie',exact:true}).click()
+  await rev.getByRole('button',{name:'Rifiuta non necessari',exact:true}).click()
+  assert.equal(await rev.evaluate(()=>window.vaq.filter(x=>x[0]==='beforeSend').at(-1)[1]({type:'pageview',url:location.href})),null,'failed revocation persistence cannot reactivate the old acceptance by reload')
+  await revokeBlocked.close()
+  console.log(`PASS consent browser ${viewport.width}x${viewport.height}: first visit, refusal, selective opt-in, accept, private route, revoke, cleanup, X, Escape, technical only, expired/malformed/blocked storage`)
  }
 } finally {await browser.close();server.stop()}

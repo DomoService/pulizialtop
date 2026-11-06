@@ -1,15 +1,16 @@
+export const COOKIE_NOTICE_VERSION = "cookie-1"
 export const CONSENT_KEY = "pulizialtop-consent-v1"
 // Keep the key/version stable: adding a timestamp is not a change of purposes.
 export function consentRecord(analytics: boolean, now = new Date()) {
   const expires = new Date(now)
   expires.setMonth(expires.getMonth() + 6)
-  return JSON.stringify({ version: 1, analytics, savedAt: now.getTime(), expires: expires.getTime() })
+  return JSON.stringify({ version: 1, noticeVersion: COOKIE_NOTICE_VERSION, analytics, savedAt: now.getTime(), expires: expires.getTime() })
 }
 export function readConsent(raw: string | null, now = Date.now()): boolean | null {
   if (!raw) return null
   try {
     const v = JSON.parse(raw)
-    return v.version === 1 && typeof v.analytics === "boolean" &&
+    return v.version === 1 && (v.noticeVersion === undefined || v.noticeVersion === COOKIE_NOTICE_VERSION) && typeof v.analytics === "boolean" &&
       Number.isFinite(v.expires) && v.expires > now ? v.analytics : null
   } catch { return null }
 }

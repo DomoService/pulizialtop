@@ -24,13 +24,15 @@ export function CookiePreferences({ enabled }: { enabled: boolean }) {
   const [custom, setCustom] = useState(false)
   const [analytics, setAnalytics] = useState(false)
   const allowed = useRef(false)
+  const temporaryChoice = useRef<string | null>(null)
+  const [storageError, setStorageError] = useState(false)
   const opener = useRef<HTMLElement | null>(null)
   const path = usePathname()
   useEffect(() => {
     let saved: boolean | null = null
     try {
       saved = readConsent(localStorage.getItem(CONSENT_KEY))
-    } catch {}
+    } catch { setStorageError(true) }
     allowed.current = saved === true
     setChoice(saved)
     setAnalytics(saved === true)
@@ -51,6 +53,7 @@ export function CookiePreferences({ enabled }: { enabled: boolean }) {
     const expire = () => {
       let valid = null
       try { valid = readConsent(localStorage.getItem(CONSENT_KEY)) } catch {}
+      if (valid === null && readConsent(temporaryChoice.current) === false) return
       if (valid === null) {
         allowed.current = false
         setChoice(null)
@@ -69,14 +72,20 @@ export function CookiePreferences({ enabled }: { enabled: boolean }) {
     }
   }, [enabled])
   function save(value: boolean) {
-    allowed.current = value
+    // Consent must be readable after writing. Storage errors never enable analytics.
+    let persisted = false
     try {
       localStorage.setItem(CONSENT_KEY, consentRecord(value))
+      persisted = readConsent(localStorage.getItem(CONSENT_KEY)) === value
     } catch {}
-    setChoice(value)
-    setAnalytics(value)
+    const effective = persisted && value
+    allowed.current = effective
+    temporaryChoice.current = persisted ? null : consentRecord(false)
+    setStorageError(!persisted)
+    setChoice(effective)
+    setAnalytics(effective)
     setOpen(false)
-    if (!value) {
+    if (!effective) {
       // Stop already-loaded SDKs before reload; delete legacy GA cookies on all applicable domains.
       ;(window as any)["ga-disable-G-FXSFE7DZCP"] = true
       for (const part of document.cookie.split(";")) {
@@ -87,7 +96,9 @@ export function CookiePreferences({ enabled }: { enabled: boolean }) {
         for (let i = 0; i < domains.length - 1; i++)
           document.cookie = `${name}=; Max-Age=0; path=/; domain=.${domains.slice(i).join(".")}`
       }
-      if (choice === true) location.reload()
+      // If persistence fails, reloading could restore an old acceptance.
+      // Keep the live SDK filter denied for the remainder of this document.
+      if (choice === true && persisted) location.reload()
     }
   }
   const load = enabled && choice === true && !isPrivatePath(path)
@@ -115,7 +126,7 @@ export function CookiePreferences({ enabled }: { enabled: boolean }) {
       >
         <DialogContent
           showCloseButton={false}
-          className="max-h-[90dvh] overflow-y-auto"
+          className="z-[100] max-h-[90dvh] overflow-y-auto"
           onCloseAutoFocus={(event) => { event.preventDefault(); opener.current?.focus() }}
         >
           <DialogClose className="absolute right-4 top-3 rounded p-2 focus-visible:outline" aria-label="Chiudi: solo strumenti necessari">×</DialogClose>
@@ -123,7 +134,7 @@ export function CookiePreferences({ enabled }: { enabled: boolean }) {
           <DialogDescription>
             {enabled
               ? "I servizi statistici facoltativi sono bloccati finché non scegli. Rifiutare non limita le funzioni del sito."
-              : "Sono attivi solo strumenti tecnici necessari. Le statistiche facoltative sono disabilitate: non è richiesto un consenso per attivarli."}
+              : "Sono attivi solo strumenti tecnici necessari. Vercel Web Analytics è disabilitato: non è richiesto un consenso e non viene mostrato un banner automatico."}
           </DialogDescription>
           <p className="text-sm">
             Preferenze conservate sul dispositivo per sei mesi, con versione e
@@ -134,6 +145,7 @@ export function CookiePreferences({ enabled }: { enabled: boolean }) {
               Cookie Policy
             </Link>
           </p>
+          {storageError && <p role="status" className="text-sm">Le preferenze non possono essere memorizzate in questo browser. Restano attivi solo gli strumenti necessari; la scelta potrebbe essere richiesta alla prossima visita.</p>}
           {custom && enabled && (
             <fieldset className="space-y-3 text-sm">
               <legend>Categorie</legend>
@@ -149,7 +161,7 @@ export function CookiePreferences({ enabled }: { enabled: boolean }) {
               </label>
             </fieldset>
           )}
-          <div className="flex flex-wrap gap-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
             {enabled && (
               <>
                 <Button variant="outline" onClick={() => save(true)}>

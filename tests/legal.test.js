@@ -198,3 +198,12 @@ test('private source register rejects unauthenticated reads before table access'
  await expect(actions.getProvenanceReview(0)).rejects.toThrow()
  expect(from).not.toHaveBeenCalled()
 })
+
+test('notice version is explicit while valid legacy choices are preserved',async()=>{
+ const {COOKIE_NOTICE_VERSION}=await import('../lib/legal/consent')
+ const record=JSON.parse(consentRecord(false))
+ expect(record.noticeVersion).toBe(COOKIE_NOTICE_VERSION)
+ expect(readConsent(JSON.stringify({...record,noticeVersion:'unknown-version'}))).toBeNull()
+ delete record.noticeVersion
+ expect(readConsent(JSON.stringify(record))).toBe(false)
+})
