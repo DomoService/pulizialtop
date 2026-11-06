@@ -173,3 +173,23 @@ test("absence of an appointed DPO is not an incomplete mandatory contact", () =>
  expect(settings.dpo).toBe("")
  expect(missingLegalFields(settings).some(label=>label.startsWith("DPO"))).toBe(false)
 })
+
+test("consent records date, preserves legacy refusal and excludes login/recovery", () => {
+  const now = new Date("2026-11-06T12:00:00Z")
+  const v = JSON.parse(consentRecord(false, now))
+  expect(v.savedAt).toBe(now.getTime())
+  expect(readConsent(JSON.stringify({ version: 1, analytics: false, expires: v.expires }), now.getTime())).toBe(false)
+  expect(readConsent(consentRecord(false, now), new Date("2027-05-05").getTime())).toBe(false)
+  expect(readConsent(consentRecord(false, now), new Date("2027-05-07").getTime())).toBe(null)
+  for (const path of ["/agenzia/login", "/agenzia/password-dimenticata", "/agenzia/nuova-password"]) expect(isPrivatePath(path)).toBe(true)
+})
+
+test("loaded analytics SDK cannot send after revocation or on a private navigation", async () => {
+  const { redactAnalyticsEvent } = await import("../lib/legal/consent")
+  const event = { type: "pageview", url: "https://example.test/agenzia/42?email=private@example.test#token" }
+  expect(redactAnalyticsEvent(event, null, "/")).toBeNull()
+  expect(redactAnalyticsEvent(event, consentRecord(false), "/")).toBeNull()
+  expect(redactAnalyticsEvent(event, consentRecord(true), "/auth/recovery")).toBeNull()
+  expect(redactAnalyticsEvent({ ...event, type: "event", data: { email: "private" } }, consentRecord(true), "/")).toBeNull()
+  expect(redactAnalyticsEvent(event, consentRecord(true), "/").url).toBe("https://example.test/agenzia/42")
+})

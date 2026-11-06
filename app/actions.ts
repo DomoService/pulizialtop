@@ -44,7 +44,7 @@ export async function getAgencies(filters?: {
   type?: string
   province?: string
 }) {
-  console.log("[v0] Fetching agencies with filters:", filters)
+
   const supabase = await getSupabaseServerClient()
 
   let query = supabase
@@ -73,12 +73,12 @@ export async function getAgencies(filters?: {
   const { data: agenciesData, error } = await query
 
   if (error) {
-    console.error("[v0] Error fetching agencies:", error.message)
+    console.error("[v0] Error fetching agencies:", { code: error.code })
     return []
   }
 
   if (!agenciesData || agenciesData.length === 0) {
-    console.log("[v0] No agencies found")
+
     return []
   }
 
@@ -127,7 +127,6 @@ export async function getAgencies(filters?: {
     servizi: agencyServicesMap.get(agency.agency_id) || [],
   }))
 
-  console.log("[v0] Found agencies:", agencies.length)
   return agencies as Agency[]
 }
 
@@ -142,7 +141,7 @@ export async function getAgencyReviews(agencyId: string) {
     .order("created_at", { ascending: false })
 
   if (error) {
-    console.error("Error fetching reviews:", error)
+    console.error("Error fetching reviews:", { code: error.code })
     return []
   }
 
@@ -162,7 +161,7 @@ export async function getApprovedReviews(agencyId: number) {
     .order("created_at", { ascending: false })
 
   if (error) {
-    console.error("[v0] Error fetching reviews:", error)
+    console.error("[v0] Error fetching reviews:", { code: error.code })
     return []
   }
 
@@ -252,63 +251,25 @@ export async function moderateReview(
 }
 
 export async function getAgencyByToken(token: string) {
-  const supabase = await getSupabaseServerClient()
-
-  const { data, error } = await supabase
-    .from("agencies")
-    .select(
-      "agency_id,nome,tipo,province_id,indirizzo,cap,telefono,email,website,partita_iva,google_rating,google_reviews,descrizione,image_url,logo_url"
-    )
-    .eq("review_token", token)
-    .single()
-
-  if (error || !data) {
-    return null
-  }
-
-  const { data: provinceData } = await supabase
-    .from("provinces")
-    .select("nome")
-    .eq("province_id", data.province_id)
-    .single()
-
-  return {
-    ...data,
-    province: provinceData?.nome || "N/A",
-  } as Agency
+  if (!z.string().uuid().safeParse(token).success) return null
+  const db = await getSupabaseServerClient()
+  const { data, error } = await db.rpc("get_public_agency_review_link", { p_token: token })
+  return error ? null : data
 }
 
 export async function submitReviewWithToken(formData: FormData) {
-  const supabase = await getSupabaseServerClient()
-
-  const token = formData.get("review_token") as string
-  const { data: agency } = await supabase
-    .from("agencies")
-    .select("agency_id")
-    .eq("review_token", token)
-    .single()
-
-  if (!agency) {
-    return { success: false, error: "Link non valido" }
-  }
-
-  const reviewData = {
-    agency_id: agency.agency_id,
-    reviewer_name: formData.get("reviewer_name") as string,
-    reviewer_email: formData.get("reviewer_email") as string,
-    rating: Number.parseInt(formData.get("rating") as string),
-    comment: formData.get("comment") as string,
-    status: "pending" as const,
-  }
-
-  const { error } = await supabase.from("reviews").insert(reviewData)
-
-  if (error) {
-    console.error("[v0] Error submitting review:", error)
-    return { success: false, error: error.message }
-  }
-
-  return { success: true }
+  const token = formData.get("review_token")
+  if (!z.string().uuid().safeParse(token).success) return { success: false, error: "Link non valido" }
+  const parsed = publicReviewSchema.omit({ agency_id: true }).safeParse(Object.fromEntries(formData))
+  if (!parsed.success) return { success: false, error: "Controlla i campi e le dichiarazioni" }
+  try {
+    const db = await getSupabaseServerClient()
+    const { error } = await db.rpc("submit_agency_link_review", {
+      p_token: token, p_reviewer_name: parsed.data.reviewer_name,
+      p_reviewer_email: parsed.data.reviewer_email, p_rating: parsed.data.rating, p_comment: parsed.data.comment,
+    })
+    return error ? { success: false, error: "Invio non riuscito. Verifica il link o riprova più tardi." } : { success: true }
+  } catch { return { success: false, error: "Servizio non disponibile" } }
 }
 
 export async function createReviewInvitation(formData: FormData) {
@@ -331,7 +292,7 @@ export async function createReviewInvitation(formData: FormData) {
     .insert(invitationData)
 
   if (error) {
-    console.error("[v0] Error creating invitation:", error)
+    console.error("[v0] Error creating invitation:", { code: error.code })
     return { success: false, error: "Invito non creato. Verifica autorizzazione e configurazione del database." }
   }
 
@@ -349,7 +310,7 @@ export async function getAgencyInvitations(agencyId: number) {
     .order("sent_at", { ascending: false })
 
   if (error) {
-    console.error("[v0] Error fetching invitations:", error)
+    console.error("[v0] Error fetching invitations:", { code: error.code })
     throw new Error("Elenco inviti non disponibile")
   }
 
@@ -564,8 +525,6 @@ export async function addNewAgency(formData: FormData) {
   const supabase = await getSupabaseServerClient()
   await requireAdmin(supabase)
 
-  console.log("[v0] Starting addNewAgency")
-
   const provinceName = formData.get("provincia") as string
   const { data: provinceData, error: provinceError } = await supabase
     .from("provinces")
@@ -574,24 +533,16 @@ export async function addNewAgency(formData: FormData) {
     .single()
 
   if (provinceError || !provinceData) {
-    console.log("[v0] Province error:", provinceError)
+
     return { success: false, error: "Provincia non valida" }
   }
 
   let logoUrl: string | null = null
   const logoFile = formData.get("logo") as File
 
-  console.log("[v0] Logo file:", {
-    name: logoFile?.name,
-    size: logoFile?.size,
-    type: logoFile?.type,
-  })
-
   if (logoFile && logoFile.size > 0) {
     const fileExt = logoFile.name.split(".").pop()
     const fileName = `${crypto.randomUUID()}.${fileExt}`
-
-    console.log("[v0] Uploading file:", fileName)
 
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from("agency-logos")
@@ -601,19 +552,18 @@ export async function addNewAgency(formData: FormData) {
       })
 
     if (uploadError) {
-      console.error("[v0] Error uploading logo:", uploadError)
+      console.error("[v0] Error uploading logo:", { code: uploadError.name })
       return {
         success: false,
         error: `Errore durante il caricamento del logo: ${uploadError.message}`,
       }
     }
 
-    console.log("[v0] Upload successful, getting public URL")
     const { data: urlData } = supabase.storage
       .from("agency-logos")
       .getPublicUrl(fileName)
     logoUrl = urlData.publicUrl
-    console.log("[v0] Public URL:", logoUrl)
+
   }
 
   const reviewToken = crypto.randomUUID()
@@ -635,15 +585,13 @@ export async function addNewAgency(formData: FormData) {
     review_token: reviewToken,
   }
 
-  console.log("[v0] Inserting agency data")
   const { error } = await supabase.from("agencies").insert(agencyData)
 
   if (error) {
-    console.error("[v0] Error adding agency:", error)
+    console.error("[v0] Error adding agency:", { code: error.code })
     return { success: false, error: error.message }
   }
 
-  console.log("[v0] Agency added successfully")
   return { success: true }
 }
 
@@ -679,7 +627,7 @@ export async function updateAgency(formData: FormData) {
       })
 
     if (uploadError) {
-      console.error("[v0] Error uploading logo:", uploadError)
+      console.error("[v0] Error uploading logo:", { code: uploadError.name })
       return { success: false, error: "Errore durante il caricamento del logo" }
     }
 
@@ -709,7 +657,7 @@ export async function updateAgency(formData: FormData) {
     .eq("agency_id", agencyId)
 
   if (error) {
-    console.error("[v0] Error updating agency:", error)
+    console.error("[v0] Error updating agency:", { code: error.code })
     return { success: false, error: error.message }
   }
 
@@ -732,7 +680,7 @@ export async function deleteAgency(agencyId: number) {
     .eq("agency_id", agencyId)
 
   if (error) {
-    console.error("[v0] Error deleting agency:", error)
+    console.error("[v0] Error deleting agency:", { code: error.code })
     return { success: false, error: error.message }
   }
 

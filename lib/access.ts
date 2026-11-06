@@ -20,10 +20,9 @@ export async function requireAgencyAccess(client: SupabaseClient, agencyId: numb
     throw new AgencyAccessDenied()
   }
   if (isAdmin(user)) return user
-  const { data: agency, error: agencyError } = await client.from("agencies")
-    .select("email").eq("agency_id", agencyId).single()
-  if (agencyError || !agency?.email || !user.email || agency.email.toLowerCase() !== user.email.toLowerCase()) {
-    throw new AgencyAccessDenied()
-  }
+  // The existing audited RPC checks fresh auth.users identity AND uniqueness across
+  // the table. A SELECT filtered by RLS cannot reliably detect duplicate owners.
+  const { data: allowed, error: accessError } = await client.rpc("can_manage_agency_invites", { p_agency: agencyId })
+  if (accessError || allowed !== true) throw new AgencyAccessDenied()
   return user
 }

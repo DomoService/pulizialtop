@@ -14,14 +14,15 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
-import { submitReview } from "@/app/actions"
+import { submitReview, submitReviewWithToken } from "@/app/actions"
 
 interface ReviewFormProps {
   agencyId: number
   agencyName: string
+  token?: string
 }
 
-export function ReviewForm({ agencyId, agencyName }: ReviewFormProps) {
+export function ReviewForm({ agencyId, agencyName, token }: ReviewFormProps) {
   const [rating, setRating] = useState(0)
   const [hoveredRating, setHoveredRating] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -32,8 +33,9 @@ export function ReviewForm({ agencyId, agencyName }: ReviewFormProps) {
     if (isSubmitting) return
     setError(null)
     setIsSubmitting(true)
+    if (token) formData.set("review_token", token)
     try {
-      const result = await submitReview(formData)
+      const result = await (token ? submitReviewWithToken(formData) : submitReview(formData))
       if (result.success) {
         setSubmitted(true)
       } else {
@@ -52,7 +54,7 @@ export function ReviewForm({ agencyId, agencyName }: ReviewFormProps) {
         <CardTitle>Lascia una recensione</CardTitle>
         <CardDescription>
           Recensisci {agencyName}: la tua recensione sarà pubblicata dopo la
-          nostra verifica
+          moderazione
         </CardDescription>
       </CardHeader>
       <CardContent>

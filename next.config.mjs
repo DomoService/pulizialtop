@@ -22,7 +22,7 @@ const nextConfig = {
   },
   async headers() {
     return [
-      ...["/admin/:path*", "/agenzia/:id/dashboard", "/agenzia/login", "/invito/:path*"].map(source => ({
+      ...["/admin/:path*", "/agenzia/:id/dashboard", "/agenzia/login", "/invito/:path*", "/recensione/:path*", "/auth/:path*"].map(source => ({
         source,
         headers: [{ key: "Cache-Control", value: "private, no-store, max-age=0" }],
       })),
@@ -30,7 +30,7 @@ const nextConfig = {
         source: "/:path*",
         headers: [
           { key: "X-Content-Type-Options", value: "nosniff" },
-          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: "Referrer-Policy", value: "no-referrer" },
         ],
       },
     ]

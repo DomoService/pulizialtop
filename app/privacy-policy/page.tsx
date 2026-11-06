@@ -80,6 +80,32 @@ export default async function Page() {
           consultazione.
         </p>
       </LegalSection>
+      <LegalSection title="Account agenzie, inviti e preventivi">
+        <p>Account agenzie: email di accesso, credenziali gestite da Supabase Auth,
+          sessione e associazione alla scheda per l’area riservata e il recupero password
+          (art. 6.1.b GDPR); controlli di accesso e prevenzione abusi (6.1.f).
+          I recapiti pubblici dell’impresa sono distinti dai dati privati dei clienti.</p>
+        <p>Inviti alle recensioni: l’agenzia inserisce nome ed email del cliente per
+          generare un link riservato; il cliente sceglie il nome pubblico e il testo.
+          L’email del cliente e il token non sono pubblicati. Il codice genera il link,
+          non invia automaticamente l’invito. Il titolare deve confermare e documentare
+          con l’agenzia ruoli, liceità della comunicazione dei dati del cliente e base
+          giuridica dell’invito (eventuale interesse legittimo, art. 6.1.f, previa
+          verifica di aspettative e bilanciamento; nessun riuso promozionale implicito).</p>
+        <p>Preventivi: i pulsanti telefono/email aprono un contatto diretto con
+          l’impresa scelta. Non è presente un inoltro automatico multi-agenzia.
+          Inviando l’email comunichi al destinatario l’indirizzo mittente e quanto
+          scrivi; la piattaforma non riceve automaticamente quel messaggio.
+          Le richieste dal modulo Contattaci vanno invece al gestore del sito.
+          L’impresa destinataria deve fornire la propria informativa.</p>
+        <p>Destinatari: il gestore e i suoi autorizzati gestiscono i contatti; ogni
+          agenzia autorizzata gestisce i propri inviti. I fornitori tecnici indicati
+          sotto trattano i dati necessari al servizio. Criteri di conservazione:
+          account e relativi collegamenti seguono la sezione account; inviti,
+          contatti e preventivi ricevuti dal gestore la sezione richieste; contributi
+          pubblicati la sezione recensioni. Contratti, trasferimenti e durate devono
+          essere confermati dal titolare prima dell’informativa definitiva.</p>
+      </LegalSection>
       <LegalSection title="Schede da fonti pubbliche: art. 14 GDPR">
         <p>
           Alcune schede possono essere inserite dalla piattaforma e non
@@ -90,7 +116,10 @@ export default async function Page() {
             label="fonti effettive, dati aziendali e valutazione interesse legittimo"
           />
           . I dati pubblici non sono automaticamente riutilizzabili senza
-          limiti.
+          limiti. Per ditte individuali e professionisti vanno valutati anche
+          i dati che identificano la persona fisica. Puoi chiedere correzione,
+          rivendicazione o rimozione attraverso il <Link href="/segnala-un-problema" className="underline">modulo dedicato</Link>;
+          la richiesta è valutata dal gestore e non comporta cancellazione automatica.
         </p>
         <p>
           Quando applicabile, il titolare deve fornire l’informativa individuale

@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { usePathname } from "next/navigation"
 import { Analytics } from "@vercel/analytics/next"
 import {
@@ -7,6 +7,7 @@ import {
   DialogContent,
   DialogTitle,
   DialogDescription,
+  DialogClose,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import {
@@ -14,6 +15,7 @@ import {
   consentRecord,
   readConsent,
   isPrivatePath,
+  redactAnalyticsEvent,
 } from "@/lib/legal/consent"
 import Link from "next/link"
 export function CookiePreferences({ enabled }: { enabled: boolean }) {
@@ -21,30 +23,53 @@ export function CookiePreferences({ enabled }: { enabled: boolean }) {
   const [open, setOpen] = useState(false)
   const [custom, setCustom] = useState(false)
   const [analytics, setAnalytics] = useState(false)
+  const allowed = useRef(false)
+  const opener = useRef<HTMLElement | null>(null)
   const path = usePathname()
   useEffect(() => {
     let saved: boolean | null = null
     try {
       saved = readConsent(localStorage.getItem(CONSENT_KEY))
     } catch {}
+    allowed.current = saved === true
     setChoice(saved)
     setAnalytics(saved === true)
     setOpen(enabled && saved === null)
     const handler = () => {
+      opener.current = document.activeElement as HTMLElement
+      setAnalytics(allowed.current)
       setCustom(true)
       setOpen(true)
     }
     window.addEventListener("open-cookie-preferences", handler)
     const sync = (e: StorageEvent) => {
-      if (e.key === CONSENT_KEY) location.reload()
+      if (e.key === CONSENT_KEY || e.key === null) {
+        allowed.current = false
+        location.reload()
+      }
     }
+    const expire = () => {
+      let valid = null
+      try { valid = readConsent(localStorage.getItem(CONSENT_KEY)) } catch {}
+      if (valid === null) {
+        allowed.current = false
+        setChoice(null)
+        setAnalytics(false)
+        setOpen(enabled)
+      }
+    }
+    const timer = window.setInterval(expire, 60_000)
+    window.addEventListener("focus", expire)
     window.addEventListener("storage", sync)
     return () => {
       window.removeEventListener("open-cookie-preferences", handler)
       window.removeEventListener("storage", sync)
+      window.removeEventListener("focus", expire)
+      window.clearInterval(timer)
     }
   }, [enabled])
   function save(value: boolean) {
+    allowed.current = value
     try {
       localStorage.setItem(CONSENT_KEY, consentRecord(value))
     } catch {}
@@ -71,18 +96,12 @@ export function CookiePreferences({ enabled }: { enabled: boolean }) {
       {load && (
         <>
           <Analytics
+            mode="production"
             beforeSend={(event) => {
+              if (!allowed.current) return null
               try {
-                if (readConsent(localStorage.getItem(CONSENT_KEY)) !== true)
-                  return null
-              } catch {
-                return null
-              }
-              const url = new URL(event.url)
-              if (isPrivatePath(url.pathname)) return null
-              url.search = ""
-              url.hash = ""
-              return { ...event, url: url.toString() }
+                return redactAnalyticsEvent(event, localStorage.getItem(CONSENT_KEY), location.pathname)
+              } catch { return null }
             }}
           />
         </>
@@ -91,13 +110,15 @@ export function CookiePreferences({ enabled }: { enabled: boolean }) {
         open={open}
         onOpenChange={(v) => {
           setOpen(v)
-          if (!v && choice === null) save(false)
+          if (!v && enabled) save(false)
         }}
       >
         <DialogContent
           showCloseButton={false}
           className="max-h-[90dvh] overflow-y-auto"
+          onCloseAutoFocus={(event) => { event.preventDefault(); opener.current?.focus() }}
         >
+          <DialogClose className="absolute right-4 top-3 rounded p-2 focus-visible:outline" aria-label="Chiudi: solo strumenti necessari">×</DialogClose>
           <DialogTitle>Preferenze cookie</DialogTitle>
           <DialogDescription>
             {enabled
@@ -106,13 +127,14 @@ export function CookiePreferences({ enabled }: { enabled: boolean }) {
           </DialogDescription>
           <p className="text-sm">
             Preferenze conservate sul dispositivo per sei mesi, con versione e
-            scadenza, senza identificativi o invio al server. Puoi cambiarle dal
-            footer.{" "}
+            data della scelta e scadenza, senza identificativi o invio al server. Puoi cambiarle dal
+            footer. Chiudere con X o Esc mantiene solo gli strumenti necessari.{" "}
+            <Link href="/privacy-policy" className="underline">Privacy Policy</Link>{" · "}
             <Link href="/cookie-policy" className="underline">
               Cookie Policy
             </Link>
           </p>
-          {custom && (
+          {custom && enabled && (
             <fieldset className="space-y-3 text-sm">
               <legend>Categorie</legend>
               <p>Tecnici: sempre necessari per sessione e sicurezza.</p>
@@ -134,7 +156,7 @@ export function CookiePreferences({ enabled }: { enabled: boolean }) {
                   Accetta tutti
                 </Button>
                 <Button variant="outline" onClick={() => save(false)}>
-                  Rifiuta tutti
+                  Rifiuta non necessari
                 </Button>
                 <Button variant="outline" onClick={() => setCustom(true)}>
                   Personalizza
@@ -164,7 +186,7 @@ export function CookiePreferencesLink() {
       className="underline-offset-4 hover:underline"
       onClick={() => window.dispatchEvent(new Event("open-cookie-preferences"))}
     >
-      Gestisci preferenze cookie
+      Preferenze cookie
     </button>
   )
 }

@@ -1,3 +1,4 @@
+import { publicImageUrl } from "@/lib/public-image"
 import Image from "next/image"
 import { Star, MapPin, Phone } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -12,10 +13,10 @@ interface AgencyCardProps {
 export function AgencyCard({ agency }: AgencyCardProps) {
   const getImageUrl = () => {
     // Prima opzione: logo caricato
-    if (agency.logo_url) return agency.logo_url
+    if (publicImageUrl(agency.logo_url)) return publicImageUrl(agency.logo_url)
 
     // Seconda opzione: image_url
-    if (agency.image_url) return agency.image_url
+    if (publicImageUrl(agency.image_url)) return publicImageUrl(agency.image_url)
 
     // Terza opzione: immagini generiche per tipo
     if (agency.tipo === "pulizie") {

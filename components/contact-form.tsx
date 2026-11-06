@@ -42,7 +42,7 @@ export function ContactForm() {
   return (
     <form action={submit} className="space-y-6">
       <label className="block space-y-2">
-        <span>Nome Completo</span>
+        <span>Nome o riferimento per il riscontro</span>
         <Input name="name" required maxLength={255} />
       </label>
       <label className="block space-y-2">
@@ -69,6 +69,12 @@ export function ContactForm() {
           <Input name="website" tabIndex={-1} autoComplete="off" />
         </label>
       </div>
+      <p className="text-sm text-muted-foreground">
+        Usiamo nome, email e messaggio per rispondere alla tua richiesta
+        (art. 6.1.b GDPR, misure precontrattuali o servizio richiesto), non per marketing.
+        Il messaggio è destinato al gestore del sito e non viene inoltrato automaticamente
+        alle agenzie. Non inserire dati sensibili o informazioni di terzi non necessarie.
+      </p>
       <label className="flex gap-2 text-xs">
         <input type="checkbox" name="privacy" required />
         Ho letto la{" "}
