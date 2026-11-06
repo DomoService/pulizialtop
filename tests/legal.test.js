@@ -193,3 +193,8 @@ test("loaded analytics SDK cannot send after revocation or on a private navigati
   expect(redactAnalyticsEvent({ ...event, type: "event", data: { email: "private" } }, consentRecord(true), "/")).toBeNull()
   expect(redactAnalyticsEvent(event, consentRecord(true), "/").url).toBe("https://example.test/agenzia/42")
 })
+
+test('private source register rejects unauthenticated reads before table access',async()=>{
+ await expect(actions.getProvenanceReview(0)).rejects.toThrow()
+ expect(from).not.toHaveBeenCalled()
+})

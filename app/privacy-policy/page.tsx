@@ -132,8 +132,7 @@ export default async function Page() {
       <LegalSection title="Destinatari, fornitori e trasferimenti">
         <p>
           Vercel ospita l’applicazione e tratta dati tecnici; Supabase fornisce
-          database, autenticazione e archiviazione immagini. Aruba gestisce DNS
-          e posta esistente. Vercel Web Analytics è opzionale. Cookiebot e
+          database, autenticazione e archiviazione immagini. Aruba è il gestore della posta indicato dal titolare; la configurazione SMTP attuale non è stata letta da questa sessione. Vercel Web Analytics è opzionale. Cookiebot e
           Google Analytics sono stati rimossi dal caricamento dell’app in questa
           versione. Resend è in configurazione per future notifiche, non è
           ancora integrato nell’invio applicativo.
@@ -158,10 +157,19 @@ export default async function Page() {
         </p>
       </LegalSection>
       <LegalSection title="Conservazione e sicurezza">
+        <p>Preferenze comunicate dal titolare il 6 novembre 2026: contatti entro
+          12 mesi dalla chiusura; account durante l’attività e cancellazione o
+          anonimizzazione entro 90 giorni dalla chiusura; log di sicurezza 90 giorni,
+          salvo incidenti documentati; recensioni finché pubblicate e pertinenti con
+          riesame periodico. Non sono periodi imposti dalla legge, né attestazione
+          di una cancellazione automatica già attivata sui dati esistenti. I criteri
+          operativi e le impostazioni dei fornitori devono essere allineati prima
+          del rilascio definitivo. Le informazioni specifiche sotto distinguono
+          i trattamenti e gli eventuali valori già registrati dal gestore.</p>
         <p>
           Account:{" "}
           <Missing
-            value={s.retentionAccounts || "Non è attiva una scadenza automatica degli account nel codice. La chiusura e le richieste di cancellazione sono gestite dal titolare previa verifica di identità, obblighi e dati collegati."}
+            value={s.retentionAccounts || "Il titolare propone la conservazione durante l’attività dell’account e la cancellazione o anonimizzazione entro 90 giorni dalla chiusura. Il criterio non è una durata imposta dalla legge; non è attivata una cancellazione automatica e vanno verificati obblighi e dati collegati."}
             label="tempi o criteri account"
           />
           .
@@ -169,7 +177,7 @@ export default async function Page() {
         <p>
           Recensioni:{" "}
           <Missing
-            value={s.retentionReviews || "Non è attiva una scadenza automatica. Le recensioni sono soggette a moderazione e a richieste di rettifica/rimozione; la conservazione di email e audit richiede valutazione distinta dal testo pubblico."}
+            value={s.retentionReviews || "Il criterio indicato dal titolare è conservare le recensioni finché pubblicate e pertinenti, con riesame periodico della necessità. Non è prevista una scadenza automatica del contenuto; email privata e registri di moderazione richiedono una valutazione separata."}
             label="tempi o criteri recensioni"
           />
           .
@@ -177,7 +185,7 @@ export default async function Page() {
         <p>
           Contatti, registrazioni, segnalazioni e richieste:{" "}
           <Missing
-            value={s.retentionRequests || "Il codice registra le richieste e i riscontri senza eliminarli automaticamente. Il titolare gestisce la chiusura, le istanze di cancellazione e gli eventuali vincoli di difesa dei diritti."}
+            value={s.retentionRequests || "Per i contatti il titolare propone la cancellazione entro 12 mesi dalla chiusura. Eventuali pratiche contrattuali o controversie sono separate con motivazione. I termini per registrazioni, inviti, segnalazioni e richieste di diritti sono distinti e non si presumono identici; non è attiva una cancellazione automatica."}
             label="tempi o criteri richieste"
           />
           .
@@ -185,7 +193,7 @@ export default async function Page() {
         <p>
           Log e backup:{" "}
           <Missing
-            value={s.retentionLogs || "I log applicativi sono minimizzati. Durata di log e backup dipende anche dai fornitori; non è stata verificata la configurazione effettiva e non viene dichiarata una scadenza già applicata."}
+            value={s.retentionLogs || "Il titolare indica un obiettivo di 90 giorni per i log tecnici di sicurezza, salvo incidenti documentati. I log applicativi sono minimizzati; la disponibilità e durata effettive dipendono dai fornitori e non sono qui attestate. I backup seguono un ciclo distinto, da verificare anche in caso di ripristino."}
             label="tempi o criteri log e backup"
           />
           .

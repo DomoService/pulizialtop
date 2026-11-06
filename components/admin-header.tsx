@@ -12,6 +12,7 @@ export function AdminHeader() {
             Admin Panel
           </Link>
           <nav aria-label="Amministrazione" className="flex flex-wrap gap-4">
+            <Link href="/admin/provenienze" className="text-sm text-muted-foreground hover:text-foreground">Provenienze</Link>
             <Link
               href="/admin/conformita"
               className="text-sm text-muted-foreground hover:text-foreground"

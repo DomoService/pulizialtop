@@ -1,6 +1,6 @@
 # Conservazione: proposte, configurazione, dry-run e cancellazione manuale
 
-Nessuna proposta è adottata automaticamente. Nessun cron o DELETE è eseguito.
+Preferenze titolare del 6 novembre: contatti 12 mesi dalla chiusura, account attivo e 90 giorni dalla chiusura, log sicurezza 90 giorni salvo incidenti, recensioni pubblicate e pertinenti con riesame. Sono criteri da rendere operativi, non durate imposte dalla legge o purge già applicate. Le altre voci restano proposte tecniche. Nessun cron o DELETE è eseguito.
 Il pannello admin mostra lib/legal/retention.ts solo a utenti autorizzati.
 Le informative non mostrano i periodi proposti come già applicati.
 
@@ -8,7 +8,7 @@ Le informative non mostrano i periodi proposti come già applicati.
    rights, moderation, logs, backups. Modificare i giorni proposti prima dell'adozione.
    Definire eventi di partenza, titolari di decisione, vincoli e tempi backup reali.
 2. Preparare una policy JSON locale protetta:
-   {"approved":false,"version":"review-1","reviewedAt":null,"rules":{"contacts":{"days":180,"approved":false}}}
+   {"approved":false,"version":"review-1","reviewedAt":null,"rules":{"contacts":{"months":12,"approved":false}}}
    Approvazione e data devono essere inserite dall'operatore solo dopo la decisione.
 3. Esportare solo metadata necessari con accesso autorizzato: reference opaca, kind,
    anchor timestamp dell'evento corretto, closed boolean, legalHold boolean esplicito,

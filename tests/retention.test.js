@@ -17,3 +17,20 @@ test('optional new analytics is gated on documented supplier/transfer/log criter
  expect(canEnableOptionalAnalytics(legalSettingsSchema.parse({analyticsEnabled:true}))).toBe(false)
  expect(canEnableOptionalAnalytics(legalSettingsSchema.parse({reviewed:true,suppliers:'Reviewed fixture',transfers:'Reviewed fixture',retentionLogs:'Reviewed fixture'}))).toBe(true)
 })
+
+test('owner preferences retain calendar-month semantics and leap dates',async()=>{
+ const {retentionDeadline}=await import('../lib/legal/retention')
+ expect(retentionProposals.find(x=>x.kind==='accounts').days).toBe(90)
+ expect(retentionProposals.find(x=>x.kind==='accounts').anchor).toBe('closed_at')
+ expect(retentionProposals.find(x=>x.kind==='logs').days).toBe(90)
+ expect(retentionProposals.find(x=>x.kind==='contacts').months).toBe(12)
+ expect(new Date(retentionDeadline(Date.parse('2024-02-29T12:00:00Z'),{months:12,approved:true})).toISOString()).toBe('2025-02-28T12:00:00.000Z')
+ expect(Number.isNaN(retentionDeadline(now,{days:30,months:1,approved:true}))).toBe(true)
+})
+test('source statuses never fabricate documentary provenance',async()=>{
+ const {assessProvenance}=await import('../lib/legal/provenance')
+ expect(assessProvenance('registered').origin).toBe('direct-claimed')
+ expect(assessProvenance('claimed').evidence).toContain('non prova')
+ expect(assessProvenance(null).origin).toBe('unknown')
+ expect(assessProvenance('platform').needsReview).toBe(true)
+})

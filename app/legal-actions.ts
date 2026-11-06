@@ -137,3 +137,17 @@ export async function saveAgencyProvenance(input: unknown) {
     ? { success: false, error: "Operazione non riuscita" }
     : { success: true }
 }
+
+export async function getProvenanceReview(page = 0) {
+  const db=await getSupabaseServerClient()
+  await requireAdmin(db)
+  if(!Number.isInteger(page)||page<0||page>100000) throw new Error("Pagina non valida")
+  const {data:agencies,error}=await db.from("agencies").select("agency_id,nome,website").order("agency_id").range(page*50,page*50+49)
+  if(error) return {available:false,rows:[],hasMore:false}
+  const ids=(agencies||[]).map(a=>a.agency_id)
+  if(!ids.length) return {available:true,rows:[],hasMore:false}
+  const {data:provenance,error:provenanceError}=await db.from("agency_provenance").select("agency_id,source").in("agency_id",ids)
+  if(provenanceError) return {available:false,rows:[],hasMore:false}
+  const map=new Map((provenance||[]).map(p=>[p.agency_id,p.source]))
+  return {available:true,hasMore:ids.length===50,rows:(agencies||[]).map(a=>({...a,status:map.get(a.agency_id)||"unknown"}))}
+}
