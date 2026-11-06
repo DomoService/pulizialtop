@@ -1,3 +1,4 @@
+import { RetentionProposals } from "@/components/retention-proposals"
 import Link from "next/link"
 import { AdminHeader } from "@/components/admin-header"
 import { Footer } from "@/components/footer"
@@ -38,6 +39,7 @@ export default async function Page({
           verifica umana: nessuna eliminazione automatica.
         </p>
         <ComplianceSettings initial={settings} configured={configured} />
+        <RetentionProposals />
         <ProvenanceAdmin />
         <section className="space-y-4">
           <h2 className="text-2xl font-semibold">

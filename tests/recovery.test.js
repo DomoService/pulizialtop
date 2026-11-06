@@ -26,3 +26,20 @@ test("expired or reused code rejects", async () => {
   const response = await GET(new NextRequest("https://example.test/auth/recovery?code=expired"))
   expect(response.headers.get("location")).toBe("https://example.test/admin/password-dimenticata?invalid=1")
 })
+
+test("agency callback uses agency routes and never accepts external redirects", async () => {
+ const {GET:agencyGET}=await import('../app/auth/agenzia/recovery/route')
+ exchange.mockResolvedValueOnce({error:null})
+ const r=await agencyGET(new NextRequest('https://example.test/auth/agenzia/recovery?code=valid&next=https://evil.test'))
+ expect(r.headers.get('location')).toBe('https://example.test/agenzia/nuova-password')
+})
+test("provider errors and exchange exceptions are safe and strip tokens",async()=>{
+ const {GET:agencyGET}=await import('../app/auth/agenzia/recovery/route')
+ exchange.mockClear()
+ const rejected=await agencyGET(new NextRequest('https://example.test/auth/agenzia/recovery?error=access_denied&code=private'))
+ expect(rejected.headers.get('location')).toBe('https://example.test/agenzia/password-dimenticata?invalid=1')
+ expect(exchange).not.toHaveBeenCalled()
+ exchange.mockRejectedValueOnce(new Error('network details'))
+ const unavailable=await GET(new NextRequest('https://example.test/auth/recovery?code=private'))
+ expect(unavailable.headers.get('location')).toBe('https://example.test/admin/password-dimenticata?invalid=1')
+})

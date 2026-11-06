@@ -1,5 +1,5 @@
 import { z } from "zod"
-export const LEGAL_VERSION = "2026-11-04-draft-1"
+export const LEGAL_VERSION = "2026-11-06-review-2"
 const text = z.string().trim().max(3000)
 export const legalFields = {
   controller: "Nome o denominazione del titolare",
@@ -177,3 +177,7 @@ export const registrationSchema = z
     },
     { message: "Partita IVA formalmente non valida" }
   )
+
+export function canEnableOptionalAnalytics(s: LegalSettings) {
+  return s.reviewed && !!s.suppliers.trim() && !!s.transfers.trim() && !!s.retentionLogs.trim()
+}

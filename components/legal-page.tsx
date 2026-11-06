@@ -34,5 +34,5 @@ export function LegalSection({
   )
 }
 export function Missing({ value, label }: { value: string; label: string }) {
-  return <span>{value || `[DA COMPLETARE DAL TITOLARE: ${label}]`}</span>
+  return value ? <span>{value}</span> : null
 }

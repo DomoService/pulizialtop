@@ -1,5 +1,6 @@
 "use client"
 
+import { updateRecoveredPassword } from "@/lib/password-update"
 import { useState, type FormEvent } from "react"
 import Link from "next/link"
 import { getSupabaseBrowserClient } from "@/lib/supabase/client"
@@ -7,10 +8,11 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
-export function PasswordRecoveryForm({ update = false }: { update?: boolean }) {
+export function PasswordRecoveryForm({ update = false, audience = "admin" }: { update?: boolean; audience?: "admin" | "agenzia" }) {
   const [busy, setBusy] = useState(false)
   const [done, setDone] = useState(false)
   const [error, setError] = useState("")
+  const [warning, setWarning] = useState("")
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -27,27 +29,19 @@ export function PasswordRecoveryForm({ update = false }: { update?: boolean }) {
     try {
       const supabase = getSupabaseBrowserClient()
       if (update) {
-        const { data: { user }, error: sessionError } = await supabase.auth.getUser()
-        if (sessionError || !user) {
-          setError("Sessione scaduta. Richiedi un nuovo link di recupero.")
-          return
-        }
-        const { error } = await supabase.auth.updateUser({ password })
-        if (error) {
-          setError("Impossibile aggiornare la password. Verifica i requisiti o richiedi un nuovo link.")
-          return
-        }
-        await supabase.auth.signOut({ scope: "local" })
+        const result = await updateRecoveredPassword(supabase,password,String(data.get("confirmation") || ""))
+        if(!result.success){setError(result.error || "Aggiornamento non riuscito");return}
+        setWarning(result.warning || "")
       } else {
         await supabase.auth.resetPasswordForEmail(String(data.get("email") || "").trim(), {
-          redirectTo: `${window.location.origin}/auth/recovery`,
+          redirectTo: `${window.location.origin}${audience === "admin" ? "/auth/recovery" : "/auth/agenzia/recovery"}`,
         })
       }
       form.reset()
       setDone(true)
     } catch {
       if (update) setError("Impossibile aggiornare la password. Riprova o richiedi un nuovo link.")
-      else setDone(true)
+      else setError("Connessione al servizio non disponibile. Riprova più tardi.")
     } finally {
       setBusy(false)
     }
@@ -63,7 +57,10 @@ export function PasswordRecoveryForm({ update = false }: { update?: boolean }) {
         {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
         <Button type="submit" disabled={busy} className="w-full">{busy ? "Attendi…" : update ? "Salva nuova password" : "Invia link di recupero"}</Button>
       </form>}
-    <Link href="/admin/login" className="block underline">Torna al login</Link>
-    {update && <Link href="/admin/password-dimenticata" className="block underline">Richiedi un nuovo link</Link>}
+    <p className="text-sm">La richiesta non conferma l’esistenza di un account né il recapito dell’email. Apri solo l’ultimo link nello stesso browser della richiesta.</p>
+    {warning && <p role="status">{warning}</p>}
+    <Link href="/privacy-policy" className="underline">Privacy Policy</Link>
+    <Link href={`/${audience}/login`} className="block underline">Torna al login</Link>
+    {update && <Link href={`/${audience}/password-dimenticata`} className="block underline">Richiedi un nuovo link</Link>}
   </div>
 }

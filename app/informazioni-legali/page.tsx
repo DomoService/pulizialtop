@@ -24,7 +24,7 @@ export default async function Page() {
             "register",
             "contact",
           ] as const
-        ).map((k) => (
+        ).filter(k => !!s[k]).map((k) => (
           <div key={k}>
             <dt className="font-semibold">{legalFields[k]}</dt>
             <dd className="break-words">
@@ -37,13 +37,12 @@ export default async function Page() {
         Contatto per utenti e comunicazioni relative alla piattaforma:{" "}
         {s.contact || "info@pulizialtop.it"}. Le comunicazioni possono essere
         inviate in italiano; la richiesta viene valutata da una persona.
-        Eventuale contatto distinto per autorità/rappresentante ai sensi del
-        DSA: da confermare dal titolare.
+        Non è indicato un contatto distinto per autorità: le comunicazioni sono gestite al recapito sopra.
       </p>
       <p>
         Applicabilità DSA, accessibilità e obblighi informativi dell’attività:{" "}
         <Missing
-          value={s.applicability}
+          value={s.applicability || "La classificazione dell’attività e gli ulteriori obblighi applicabili non sono oggetto di certificazione da parte di questo sito."}
           label="valutazione professionale sulla natura e dimensioni dell’attività"
         />
         .

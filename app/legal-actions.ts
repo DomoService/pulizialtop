@@ -4,6 +4,7 @@ import { requireAdmin } from "@/lib/access"
 import { getSupabaseServerClient } from "@/lib/supabase/server"
 import {
   legalSettingsSchema,
+  canEnableOptionalAnalytics,
   LEGAL_VERSION,
   registrationSchema,
   requestSchema,
@@ -67,6 +68,7 @@ export async function saveLegalSettings(input: unknown) {
   const parsed = legalSettingsSchema.safeParse(input)
   if (!parsed.success)
     return { success: false, error: "Configurazione non valida" }
+  if (parsed.data.analyticsEnabled && !canEnableOptionalAnalytics(parsed.data)) return { success: false, error: "Prima di abilitare statistiche: conferma fornitori, trasferimenti, conservazione log e revisione delle informazioni." }
   const { error } = await db.from("legal_settings").upsert({
     id: 1,
     settings: parsed.data,

@@ -1,19 +1,9 @@
 "use client"
 
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { logoutAdmin } from "@/app/actions"
-import { useRouter } from "next/navigation"
+import { SessionLogout } from "@/components/session-logout"
 
 export function AdminHeader() {
-  const router = useRouter()
-
-  async function handleLogout() {
-    await logoutAdmin()
-    router.push("/admin/login")
-    router.refresh()
-  }
-
   return (
     <header className="border-b bg-background">
       <div className="container mx-auto flex min-h-16 flex-wrap gap-3 py-3 items-center justify-between px-4">
@@ -60,9 +50,7 @@ export function AdminHeader() {
             </Link>
           </nav>
         </div>
-        <Button variant="outline" size="sm" onClick={handleLogout}>
-          Logout
-        </Button>
+        <SessionLogout audience="admin" />
       </div>
     </header>
   )

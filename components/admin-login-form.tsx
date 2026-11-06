@@ -22,15 +22,19 @@ export function AdminLoginForm() {
     setLoading(true)
 
     const formData = new FormData(e.currentTarget)
-    const result = await loginAdmin(formData)
+    try {
+      const result = await loginAdmin(formData)
 
-    if (result.error) {
-      setError(result.error)
-      setLoading(false)
-    } else {
-      router.push("/admin/recensioni")
-      router.refresh()
-    }
+      if (result.error) {
+        setError(result.error)
+        setLoading(false)
+      } else {
+        router.push("/admin/recensioni")
+        router.refresh()
+      }
+    } catch {
+      setError("Connessione non disponibile. Riprova.")
+    } finally { setLoading(false) }
   }
 
   return (
@@ -43,13 +47,13 @@ export function AdminLoginForm() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" name="email" type="email" placeholder="admin@pulizialtop.it" required />
+            <Input id="email" name="email" autoComplete="username" type="email" placeholder="admin@pulizialtop.it" required />
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
-            <Input id="password" name="password" type="password" required />
+            <Input id="password" name="password" autoComplete="current-password" type="password" required />
           </div>
-          {error && <div className="text-sm text-red-600">{error}</div>}
+          {error && <div role="alert" className="text-sm text-red-600">{error}</div>}
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? "Accesso in corso..." : "Accedi"}
           </Button>

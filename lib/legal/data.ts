@@ -1,6 +1,6 @@
 import { cache } from "react"
 import { getSupabaseServerClient } from "@/lib/supabase/server"
-import { defaultLegalSettings, legalSettingsSchema } from "./schema"
+import { defaultLegalSettings, legalSettingsSchema, canEnableOptionalAnalytics } from "./schema"
 // Never cache across users or silently treat missing setup as completed compliance.
 export const getLegalSettings = cache(async () => {
   try {
@@ -8,7 +8,7 @@ export const getLegalSettings = cache(async () => {
     const { data, error } = await db.rpc("get_public_legal_settings")
     const parsed = legalSettingsSchema.safeParse(data)
     if (!error && parsed.success)
-      return { settings: parsed.data, configured: true }
+      return { settings: { ...parsed.data, analyticsEnabled: parsed.data.analyticsEnabled && canEnableOptionalAnalytics(parsed.data) }, configured: true }
   } catch {
     /* The public pages remain readable if database setup is pending. */
   }

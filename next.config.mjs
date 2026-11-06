@@ -22,7 +22,7 @@ const nextConfig = {
   },
   async headers() {
     return [
-      ...["/admin/:path*", "/agenzia/:id/dashboard", "/agenzia/login", "/invito/:path*", "/recensione/:path*", "/auth/:path*"].map(source => ({
+      ...["/admin/:path*", "/agenzia/:id/dashboard", "/agenzia/login", "/agenzia/password-dimenticata", "/agenzia/nuova-password", "/invito/:path*", "/recensione/:path*", "/auth/:path*"].map(source => ({
         source,
         headers: [{ key: "Cache-Control", value: "private, no-store, max-age=0" }],
       })),

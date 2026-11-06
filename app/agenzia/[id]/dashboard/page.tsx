@@ -4,6 +4,7 @@ import { CompanyReviewResponse } from "@/components/company-review-response"
 import { getApprovedReviews } from "@/app/actions"
 import { getSupabaseServerClient } from "@/lib/supabase/server"
 import { requireAgencyAccess, AgencyAccessDenied } from "@/lib/access"
+import { SessionLogout } from "@/components/session-logout"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { getAgencyById, getAgencyInvitations } from "@/app/actions"
@@ -43,6 +44,7 @@ export default async function AgencyDashboardPage({
         <div className="container mx-auto px-4 py-12">
           <div className="mx-auto max-w-4xl space-y-8">
             <div>
+              <SessionLogout />
               <h1 className="text-3xl font-bold">Dashboard - {agency.nome}</h1>
               <p className="text-muted-foreground">
                 Gestisci gli inviti alle recensioni per i tuoi clienti

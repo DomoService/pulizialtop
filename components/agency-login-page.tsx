@@ -2,6 +2,7 @@
 
 import type React from "react"
 
+import Link from "next/link"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Header } from "@/components/header"
@@ -25,14 +26,18 @@ export function AgencyLoginPage({ children }: { children: React.ReactNode }) {
     const email = formData.get("email") as string
     const password = formData.get("password") as string
 
-    const result = await loginAgency(email, password)
+    try {
+      const result = await loginAgency(email, password)
 
-    if (result.success && result.agency) {
-      router.push(`/agenzia/${result.agency.agency_id}/dashboard`)
-    } else {
-      setError(result.error || "Credenziali non valide")
-      setLoading(false)
-    }
+      if (result.success && result.agency) {
+        router.push(`/agenzia/${result.agency.agency_id}/dashboard`)
+      } else {
+        setError(result.error || "Credenziali non valide")
+        setLoading(false)
+      }
+    } catch {
+      setError("Connessione non disponibile. Riprova.")
+    } finally { setLoading(false) }
   }
 
   return (
@@ -49,12 +54,12 @@ export function AgencyLoginPage({ children }: { children: React.ReactNode }) {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" name="email" type="email" placeholder="info@tuaagenzia.it" required />
+                <Input id="email" name="email" autoComplete="username" type="email" placeholder="info@tuaagenzia.it" required />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
-                <Input id="password" name="password" type="password" placeholder="Password del tuo account" required />
+                <Input id="password" name="password" type="password" autoComplete="current-password" placeholder="Password del tuo account" required />
               </div>
 
               {error && <div className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{error}</div>}
@@ -63,6 +68,8 @@ export function AgencyLoginPage({ children }: { children: React.ReactNode }) {
                 {loading ? "Accesso in corso..." : "Accedi"}
               </Button>
             </form>
+            <Link href="/agenzia/password-dimenticata" className="mt-4 block underline">Password dimenticata?</Link>
+            <Link href="/privacy-policy" className="mt-2 block text-sm underline">Privacy Policy</Link>
 
             <div className="mt-6 text-center text-sm text-muted-foreground">
               <p>Usa un account confermato associato all’email della tua agenzia.</p>

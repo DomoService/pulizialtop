@@ -14,7 +14,7 @@ export default async function Page() {
         Informativa ai sensi degli artt. 12, 13 e 14 GDPR. Versione{" "}
         {LEGAL_VERSION}.{" "}
         {missingLegalFields(s).length > 0 &&
-          "Bozza: informazioni del titolare e valutazioni da completare prima del rilascio definitivo. Non è una certificazione di conformità."}
+          "Questa versione descrive i flussi tecnici rilevati. La verifica dei criteri organizzativi e delle condizioni dei fornitori non è conclusa: non attesta conformità legale né una conservazione già configurata."}
       </p>
       <LegalSection title="Titolare, contatti e richieste">
         <p>
@@ -112,7 +112,7 @@ export default async function Page() {
           costituiscono adesione o partnership. Fonti, categorie di dati e
           bilanciamento:{" "}
           <Missing
-            value={s.publicSources}
+            value={s.publicSources || "Le schede possono provenire da siti aziendali o segnalazioni; la fonte per ciascuna scheda va richiesta al gestore. Non si presume una verifica indipendente o adesione dell’impresa."}
             label="fonti effettive, dati aziendali e valutazione interesse legittimo"
           />
           . I dati pubblici non sono automaticamente riutilizzabili senza
@@ -142,7 +142,7 @@ export default async function Page() {
           Persone autorizzate possono gestire richieste e contenuti. Ruoli,
           contratti art. 28, subfornitori e regioni effettive:{" "}
           <Missing
-            value={s.suppliers}
+            value={s.suppliers || "I fornitori tecnici rilevati sono elencati sopra. Non sono stati verificati contratti, subfornitori o localizzazioni effettive; non viene dichiarata la firma di accordi specifici."}
             label="elenco fornitori, ruoli e localizzazioni"
           />
           .
@@ -151,7 +151,7 @@ export default async function Page() {
           Trasferimenti extra SEE, eventuali decisioni di adeguatezza o garanzie
           art. 46 e modalità per ottenerne copia:{" "}
           <Missing
-            value={s.transfers}
+            value={s.transfers || "La presenza di Vercel o Supabase non dimostra che i dati restino nel SEE. Non sono state verificate regioni, trasferimenti o garanzie contrattuali applicate a questo progetto. Per queste informazioni contatta il titolare."}
             label="verifica trasferimenti, SCC e misure supplementari"
           />
           . Non si presume che tutti i dati restino nell’UE.
@@ -161,7 +161,7 @@ export default async function Page() {
         <p>
           Account:{" "}
           <Missing
-            value={s.retentionAccounts}
+            value={s.retentionAccounts || "Non è attiva una scadenza automatica degli account nel codice. La chiusura e le richieste di cancellazione sono gestite dal titolare previa verifica di identità, obblighi e dati collegati."}
             label="tempi o criteri account"
           />
           .
@@ -169,7 +169,7 @@ export default async function Page() {
         <p>
           Recensioni:{" "}
           <Missing
-            value={s.retentionReviews}
+            value={s.retentionReviews || "Non è attiva una scadenza automatica. Le recensioni sono soggette a moderazione e a richieste di rettifica/rimozione; la conservazione di email e audit richiede valutazione distinta dal testo pubblico."}
             label="tempi o criteri recensioni"
           />
           .
@@ -177,7 +177,7 @@ export default async function Page() {
         <p>
           Contatti, registrazioni, segnalazioni e richieste:{" "}
           <Missing
-            value={s.retentionRequests}
+            value={s.retentionRequests || "Il codice registra le richieste e i riscontri senza eliminarli automaticamente. Il titolare gestisce la chiusura, le istanze di cancellazione e gli eventuali vincoli di difesa dei diritti."}
             label="tempi o criteri richieste"
           />
           .
@@ -185,7 +185,7 @@ export default async function Page() {
         <p>
           Log e backup:{" "}
           <Missing
-            value={s.retentionLogs}
+            value={s.retentionLogs || "I log applicativi sono minimizzati. Durata di log e backup dipende anche dai fornitori; non è stata verificata la configurazione effettiva e non viene dichiarata una scadenza già applicata."}
             label="tempi o criteri log e backup"
           />
           .

@@ -421,7 +421,7 @@ export async function generateAllCredentials() {
 export async function loginAgency(email: string, password: string) {
   const supabase = await getSupabaseServerClient()
   const { data, error } = await supabase.auth.signInWithPassword({
-    email,
+    email: email.trim(),
     password,
   })
   if (error || !data.user?.email_confirmed_at || !data.user.email) {
@@ -453,6 +453,7 @@ export async function changeAgencyPassword(
 ) {
   const supabase = await getSupabaseServerClient()
   await requireAgencyAccess(supabase, agencyId)
+  if (newPassword.length < 12) return { success: false, error: "Usa almeno 12 caratteri" }
   const { error } = await supabase.auth.updateUser({ password: newPassword })
   return error ? { success: false, error: error.message } : { success: true }
 }
@@ -472,7 +473,7 @@ export async function loginAdmin(formData: FormData) {
   const password = formData.get("password") as string
 
   const { data, error } = await supabase.auth.signInWithPassword({
-    email,
+    email: email.trim(),
     password,
   })
 
