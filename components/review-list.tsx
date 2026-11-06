@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { Star } from "lucide-react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import type { Review } from "@/app/actions"
@@ -17,10 +18,16 @@ export function ReviewList({ reviews }: ReviewListProps) {
 
   return (
     <div className="space-y-4">
-      <h3 className="text-xl font-semibold">Recensioni verificate</h3>
+      <h3 className="text-xl font-semibold">Recensioni moderate</h3>
+      <p className="text-sm text-muted-foreground">
+        Moderazione editoriale, non verifica dell’acquisto.{" "}
+        <Link href="/regole-recensioni" className="underline">
+          Come gestiamo le recensioni
+        </Link>
+      </p>
       <div className="space-y-3">
         {reviews.map((review) => (
-          <Card key={review.review_id}>
+          <Card key={review.id} id={`recensione-${review.id}`}>
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between">
                 <div>
@@ -34,7 +41,9 @@ export function ReviewList({ reviews }: ReviewListProps) {
                     <Star
                       key={star}
                       className={`h-4 w-4 ${
-                        star <= review.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
+                        star <= review.rating
+                          ? "fill-yellow-400 text-yellow-400"
+                          : "text-gray-300"
                       }`}
                     />
                   ))}
@@ -43,6 +52,18 @@ export function ReviewList({ reviews }: ReviewListProps) {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">{review.comment}</p>
+              {review.company_response && (
+                <div className="mt-4 rounded border p-3">
+                  <p className="font-semibold">Risposta dell’impresa</p>
+                  <p>{review.company_response}</p>
+                </div>
+              )}
+              <Link
+                className="mt-3 inline-block text-sm underline"
+                href={`/segnala-un-problema?tipo=recensione&url=${encodeURIComponent(`https://www.pulizialtop.it/agenzia/${review.agency_id}#recensione-${review.id}`)}`}
+              >
+                Segnala o contesta questa recensione
+              </Link>
             </CardContent>
           </Card>
         ))}

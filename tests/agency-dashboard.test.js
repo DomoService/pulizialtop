@@ -1,0 +1,25 @@
+import {expect,mock,test} from "bun:test"
+const {AgencyAccessDenied}=await import('../lib/access')
+let denial=new AgencyAccessDenied()
+const guard=mock(async()=>{if(denial)throw denial})
+const read=mock(()=>{throw new Error('Must not load private dashboard data')})
+mock.module('@/lib/access',()=>({requireAgencyAccess:guard,AgencyAccessDenied}))
+mock.module('@/lib/supabase/server',()=>({getSupabaseServerClient:async()=>({})}))
+mock.module('@/app/actions',()=>({getAgencyById:read,getAgencyInvitations:read,getApprovedReviews:read,addCompanyResponse:read,createReviewInvitation:read,logoutAdmin:read}))
+for(const [path,names] of [['@/components/header',['Header']],['@/components/footer',['Footer']],['@/components/company-review-response',['CompanyReviewResponse']],['@/components/invitation-form',['InvitationForm','InvitationsList']]])mock.module(path,()=>Object.fromEntries(names.map(n=>[n,()=>null])))
+mock.module('next/navigation',()=>({redirect:(path)=>{throw new Error('REDIRECT:'+path)},notFound:()=>{throw new Error('NOT_FOUND')}}))
+const {default:Page}=await import('../app/agenzia/[id]/dashboard/page')
+test('access denied redirects before any dashboard data loads',async()=>{
+ await expect(Page({params:Promise.resolve({id:'3'})})).rejects.toThrow('REDIRECT:/agenzia/login?accesso=negato')
+ expect(read).not.toHaveBeenCalled()
+})
+test('unexpected infrastructure failures are not disguised as login rejection',async()=>{
+ denial=new Error('unavailable')
+ await expect(Page({params:Promise.resolve({id:'3'})})).rejects.toThrow('unavailable')
+ expect(read).not.toHaveBeenCalled()
+})
+test('invalid agency IDs do not perform authorization or data reads',async()=>{
+ guard.mockClear()
+ await expect(Page({params:Promise.resolve({id:'3abc'})})).rejects.toThrow('NOT_FOUND')
+ expect(guard).not.toHaveBeenCalled();expect(read).not.toHaveBeenCalled()
+})

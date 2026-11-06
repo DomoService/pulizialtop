@@ -1,141 +1,99 @@
-import { Header } from "@/components/header"
-import { Footer } from "@/components/footer"
-import type { Metadata } from "next"
-
-export const metadata: Metadata = {
-  alternates: { canonical: "https://pulizialtop.it/cookie-policy" },
+import { LegalPage, LegalSection } from "@/components/legal-page"
+import { CookiePreferencesLink } from "@/components/cookie-preferences"
+import { getLegalSettings } from "@/lib/legal/data"
+export const metadata = {
   title: "Cookie Policy",
-  description: "Informativa sui cookie di PuliziAlTop - Come utilizziamo i cookie sul nostro sito",
+  alternates: { canonical: "https://pulizialtop.it/cookie-policy" },
 }
-
-export default function CookiePolicyPage() {
+export default async function Page() {
+  const { settings } = await getLegalSettings()
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-      <main className="flex-1 container mx-auto px-4 py-16 max-w-4xl">
-        <h1 className="text-4xl font-bold mb-8">Cookie Policy</h1>
-        
-        <div className="prose prose-blue max-w-none space-y-6 text-muted-foreground">
-          <section>
-            <h2 className="text-2xl font-semibold text-foreground mb-4">1. Cosa sono i Cookie</h2>
-            <p>
-              I cookie sono piccoli file di testo che i siti web visitati dall'utente inviano al suo 
-              terminale (computer, tablet, smartphone) dove vengono memorizzati per essere poi ritrasmessi 
-              agli stessi siti alla successiva visita.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold text-foreground mb-4">2. Tipologie di Cookie Utilizzati</h2>
-            
-            <h3 className="text-xl font-semibold text-foreground mb-3 mt-6">Cookie Tecnici</h3>
-            <p>
-              Sono cookie necessari al funzionamento del sito e non richiedono il consenso dell'utente. 
-              Permettono la navigazione e l'utilizzo delle funzionalità base del sito.
-            </p>
-
-            <h3 className="text-xl font-semibold text-foreground mb-3 mt-6">Cookie Analitici</h3>
-            <p>
-              Utilizzati per raccogliere informazioni sull'uso del sito (pagine visitate, tempo di permanenza, ecc.) 
-              in forma aggregata e anonima. PuliziAlTop utilizza Vercel Analytics per monitorare le prestazioni del sito.
-            </p>
-
-            <h3 className="text-xl font-semibold text-foreground mb-3 mt-6">Cookie di Profilazione</h3>
-            <p>
-              Sono utilizzati per tracciare la navigazione dell'utente e creare profili sui suoi gusti e preferenze. 
-              Richiedono il consenso esplicito dell'utente prima dell'installazione.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold text-foreground mb-4">3. Cookie di Terze Parti</h2>
-            <p>
-              PuliziAlTop può utilizzare servizi di terze parti che installano cookie per le seguenti finalità:
-            </p>
-            <ul className="list-disc pl-6 space-y-2">
-              <li><strong>Vercel Analytics:</strong> Analisi del traffico e delle prestazioni del sito</li>
-              <li><strong>Cookiebot:</strong> Gestione del consenso per i cookie</li>
-            </ul>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold text-foreground mb-4">4. Gestione dei Cookie</h2>
-            <p>
-              L'utente può gestire le proprie preferenze sui cookie attraverso:
-            </p>
-            <ul className="list-disc pl-6 space-y-2">
-              <li><strong>Banner Cookiebot:</strong> Al primo accesso, compare un banner che permette di accettare o rifiutare i cookie</li>
-              <li><strong>Impostazioni Browser:</strong> È possibile modificare le impostazioni del browser per bloccare o eliminare i cookie</li>
-            </ul>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold text-foreground mb-4">5. Disabilitazione dei Cookie</h2>
-            <p>
-              Puoi disabilitare i cookie dalle impostazioni del tuo browser:
-            </p>
-            <ul className="list-disc pl-6 space-y-2">
-              <li><strong>Chrome:</strong> Impostazioni &gt; Privacy e sicurezza &gt; Cookie e altri dati dei siti</li>
-              <li><strong>Firefox:</strong> Opzioni &gt; Privacy e sicurezza &gt; Cookie e dati dei siti web</li>
-              <li><strong>Safari:</strong> Preferenze &gt; Privacy &gt; Gestisci dati siti web</li>
-              <li><strong>Edge:</strong> Impostazioni &gt; Cookie e autorizzazioni sito &gt; Cookie e dati dei siti</li>
-            </ul>
-            <p className="mt-4">
-              <strong>Nota:</strong> La disabilitazione dei cookie tecnici potrebbe compromettere 
-              il corretto funzionamento del sito.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold text-foreground mb-4">6. Cookie Installati</h2>
-            <div className="overflow-x-auto">
-              <table className="min-w-full border border-border">
-                <thead className="bg-muted">
-                  <tr>
-                    <th className="border border-border px-4 py-2 text-left">Nome</th>
-                    <th className="border border-border px-4 py-2 text-left">Tipologia</th>
-                    <th className="border border-border px-4 py-2 text-left">Durata</th>
-                    <th className="border border-border px-4 py-2 text-left">Finalità</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td className="border border-border px-4 py-2">CookieConsent</td>
-                    <td className="border border-border px-4 py-2">Tecnico</td>
-                    <td className="border border-border px-4 py-2">12 mesi</td>
-                    <td className="border border-border px-4 py-2">Memorizza le preferenze sui cookie</td>
-                  </tr>
-                  <tr>
-                    <td className="border border-border px-4 py-2">_vercel_analytics</td>
-                    <td className="border border-border px-4 py-2">Analitico</td>
-                    <td className="border border-border px-4 py-2">Sessione</td>
-                    <td className="border border-border px-4 py-2">Analisi traffico sito</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold text-foreground mb-4">7. Aggiornamenti</h2>
-            <p>
-              Questa Cookie Policy può essere aggiornata periodicamente. 
-              Eventuali modifiche saranno pubblicate su questa pagina.
-            </p>
-            <p className="mt-4">
-              <strong>Ultimo aggiornamento: 14 Novembre 2025</strong>
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold text-foreground mb-4">8. Contatti</h2>
-            <p>
-              Per maggiori informazioni sulla gestione dei cookie, contatta: info@pulizialtop.it
-            </p>
-          </section>
-        </div>
-      </main>
-      <Footer />
-    </div>
+    <LegalPage title="Cookie Policy">
+      <LegalSection title="Strumenti effettivamente previsti">
+        <p>
+          Cookie e memoria del browser possono servire a sessioni, sicurezza e
+          preferenze. La classificazione riguarda la funzione, non soltanto il
+          nome dello strumento. In questa versione Google Analytics e Cookiebot
+          non vengono caricati dall’applicazione.
+        </p>
+        <ul className="list-disc pl-6 space-y-2">
+          <li>
+            Supabase Auth: cookie di sessione con prefisso sb- per login e
+            rinnovo (necessari, fornitore Supabase): sb-&lt;progetto&gt;-auth-token,
+            anche in frammenti .0/.1; nel recupero PKCE anche il suffisso
+            -code-verifier. Il default di @supabase/ssr 0.7.0 nel codice è
+            Max-Age 400 giorni; non coincide con validità del token o durata
+            effettiva della sessione, né è una durata osservata in tutti i browser.
+            Cookie Secure in HTTPS e SameSite=Lax; non HttpOnly perché il client
+            browser deve gestire la sessione. Durata dipendente dalle impostazioni effettive del
+            progetto, da verificare; non usati per marketing.
+          </li>
+          <li>
+            Preferenze: localStorage pulizialtop-consent-v1: categoria
+            statistiche sì/no, versione, data della scelta e scadenza di sei mesi, senza
+            identificatore utente o invio al server.
+          </li>
+          <li>Informazione tecnica: localStorage pulizialtop-cookie-info-v1, fornitore PuliziAlTop, avvenuta visualizzazione (versione, data e scadenza), sei mesi, senza identificativi e senza invio al server. È separata dalla preferenza di consenso.</li>
+          <li>
+            Componente sidebar, se utilizzato: cookie sidebar_state per stato
+            del menu, durata nel codice 7 giorni; non risulta utilizzato nelle
+            pagine pubbliche esaminate.
+          </li>
+          <li>
+            Vercel Web Analytics:{" "}
+            {settings.analyticsEnabled
+              ? "abilitato come opzione, ma caricato solo dopo consenso"
+              : "disabilitato"}
+            (categoria statistiche, fornitore Vercel, endpoint /_vercel/insights).
+            Il fornitore descrive un identificatore hash ricavato dalla richiesta,
+            con sessione eliminata dopo 24 ore: non è un cookie sul dispositivo
+            e questa durata non è quella di tutti i dati aggregati o dei log.
+            Non usa cookie secondo la documentazione del fornitore; resta uno
+            strumento statistico qui sottoposto a scelta preventiva. Query e
+            frammenti rimossi dagli eventi; percorsi riservati e richieste
+            esclusi.
+          </li>
+        </ul>
+      </LegalSection>
+      <LegalSection title="Scelte e revoca">
+        <p>
+          Se sono abilitati strumenti facoltativi, compaiono Accetta tutti,
+          Rifiuta non necessari e Personalizza con uguale accessibilità. Rifiutare o
+          chiudere senza scelta non abilita statistiche. Puoi riaprire{" "}
+          <CookiePreferencesLink enabled={settings.analyticsEnabled} /> in qualsiasi momento; revocare ricarica la
+          pagina per arrestare gli script già caricati. Sono rimossi i cookie GA
+          legacy raggiungibili sul dominio, non quelli di altri siti.
+        </p>
+        <p>
+          Se restano solo strumenti tecnici, viene mostrato al primo accesso un popup esclusivamente informativo; la chiusura registra soltanto l’avvenuta visualizzazione per sei mesi, non un consenso. Una scelta di consenso già valida è rispettata. Il comando nel footer resta disponibile. La preferenza
+          vale sei mesi sul dispositivo; non viene chiesta nuovamente a ogni
+          visita mentre resta valida. La durata scelta segue il criterio delle
+          linee guida cookie del Garante, non i tempi dei dati aziendali. La
+          cancellazione dei dati del browser può eliminarla.
+        </p>
+      </LegalSection>
+      <LegalSection title="Limiti dell’inventario">
+        <p>
+          Hosting, protezioni Vercel e servizi di autenticazione possono usare
+          ulteriori strumenti tecnici secondo configurazione. L’elenco deriva
+          dall’analisi del codice e non è una scansione esaustiva di ogni
+          browser, login, integrazione esterna o configurazione del fornitore.
+          Prima del rilascio definitivo occorre un controllo di rete e dei
+          cookie in più stati di navigazione.
+        </p>
+        <p>Non sono stati rilevati nel codice attivo pixel marketing, mappe o
+          video incorporati, CAPTCHA o richieste di geolocalizzazione, notifiche,
+          fotocamera. I font Inter sono serviti dall’app tramite next/font.
+          Link tel/mailto e siti delle imprese si aprono soltanto su azione
+          dell’utente. Le immagini locali e quelle Storage del progetto sono
+          contenuti del servizio, non strumenti statistici; altri host immagini
+          non approvati vengono sostituiti da immagini locali.</p>
+        <p>
+          Non aggiungere pixel, iframe o servizi di marketing senza aggiornare
+          l’inventario e il blocco preventivo. Nessuna categoria marketing è
+          attualmente implementata.
+        </p>
+      </LegalSection>
+    </LegalPage>
   )
 }

@@ -11,6 +11,7 @@ export async function middleware(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      cookieOptions: { sameSite: "lax", secure: process.env.NODE_ENV === "production" },
       cookies: {
         getAll() {
           return request.cookies.getAll()
@@ -42,7 +43,9 @@ export async function middleware(request: NextRequest) {
       const redirectUrl = request.nextUrl.clone()
       redirectUrl.pathname = "/admin/login"
       redirectUrl.searchParams.set("redirect", request.nextUrl.pathname)
-      return NextResponse.redirect(redirectUrl)
+      const response = NextResponse.redirect(redirectUrl)
+      supabaseResponse.cookies.getAll().forEach(cookie => response.cookies.set(cookie))
+      return response
     }
   }
 
@@ -50,5 +53,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: ["/admin/:path*", "/agenzia/:path*", "/auth/:path*"],
 }

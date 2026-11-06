@@ -1,3 +1,4 @@
+import { publicImageUrl } from "@/lib/public-image"
 import Image from "next/image"
 import { Star, MapPin, Phone } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -12,10 +13,10 @@ interface AgencyCardProps {
 export function AgencyCard({ agency }: AgencyCardProps) {
   const getImageUrl = () => {
     // Prima opzione: logo caricato
-    if (agency.logo_url) return agency.logo_url
+    if (publicImageUrl(agency.logo_url)) return publicImageUrl(agency.logo_url)
 
     // Seconda opzione: image_url
-    if (agency.image_url) return agency.image_url
+    if (publicImageUrl(agency.image_url)) return publicImageUrl(agency.image_url)
 
     // Terza opzione: immagini generiche per tipo
     if (agency.tipo === "pulizie") {
@@ -63,15 +64,20 @@ export function AgencyCard({ agency }: AgencyCardProps) {
           src={imageUrl || "/placeholder.svg"}
           alt={agency.nome}
           fill
+          referrerPolicy="no-referrer"
           className={agency.logo_url ? "object-contain p-6" : "object-cover"}
         />
-        <Badge className="absolute right-3 top-3 bg-background/90 text-foreground capitalize">{agency.tipo}</Badge>
+        <Badge className="absolute right-3 top-3 bg-background/90 text-foreground capitalize">
+          {agency.tipo}
+        </Badge>
       </div>
 
       <CardHeader className="pb-4">
         <div className="flex items-start justify-between gap-2">
           <div>
-            <h3 className="text-xl font-semibold text-card-foreground">{agency.nome}</h3>
+            <h3 className="text-xl font-semibold text-card-foreground">
+              {agency.nome}
+            </h3>
             <div className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
               <MapPin className="h-4 w-4" />
               <span>
@@ -84,9 +90,13 @@ export function AgencyCard({ agency }: AgencyCardProps) {
           <div className="flex flex-col items-end">
             <div className="flex items-center gap-1">
               <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-              <span className="text-lg font-bold text-card-foreground">{rating > 0 ? rating.toFixed(1) : "N/A"}</span>
+              <span className="text-lg font-bold text-card-foreground">
+                {rating > 0 ? rating.toFixed(1) : "N/A"}
+              </span>
             </div>
-            <span className="text-xs text-muted-foreground">{agency.google_reviews} recensioni</span>
+            <span className="text-xs text-muted-foreground">
+              {agency.google_reviews} recensioni
+            </span>
           </div>
         </div>
       </CardHeader>
@@ -111,11 +121,21 @@ export function AgencyCard({ agency }: AgencyCardProps) {
       </CardContent>
 
       <CardFooter className="flex gap-2 border-t border-border pt-4">
-        <Button variant="outline" size="sm" className="flex-1 bg-transparent" asChild>
+        <Button
+          variant="outline"
+          size="sm"
+          className="flex-1 bg-transparent"
+          asChild
+        >
           <a href={`/agenzia/${agency.agency_id}`}>Vedi Dettagli</a>
         </Button>
         {agency.telefono && (
-          <Button variant="outline" size="sm" className="flex-1 bg-transparent" asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1 bg-transparent"
+            asChild
+          >
             <a href={`tel:${agency.telefono}`}>
               <Phone className="mr-2 h-4 w-4" />
               Chiama

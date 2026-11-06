@@ -4,7 +4,13 @@ import { getPendingReviews, addCompanyResponse } from "@/app/actions"
 import { ReviewModerationCard } from "@/components/review-moderation-card"
 
 export default async function AdminReviewsPage() {
-  const pendingReviews = await getPendingReviews()
+  let pendingReviews: any[] = []
+  let loadError = false
+  try {
+    pendingReviews = await getPendingReviews()
+  } catch {
+    loadError = true
+  }
 
   async function handleAddResponse(formData: FormData) {
     "use server"
@@ -21,10 +27,20 @@ export default async function AdminReviewsPage() {
           <div className="mx-auto max-w-4xl space-y-6">
             <div>
               <h1 className="text-3xl font-bold">Moderazione Recensioni</h1>
-              <p className="text-muted-foreground">Approva o rifiuta le recensioni in attesa di verifica</p>
+              <p className="text-muted-foreground">
+                Approva o rifiuta le recensioni in attesa di moderazione. Sono
+                mostrate fino a 100 recensioni pendenti, dalle più vecchie; dopo
+                le decisioni si caricano le successive.
+              </p>
             </div>
 
-            {pendingReviews.length === 0 ? (
+            {loadError ? (
+              <p role="alert">
+                Moderazione temporaneamente non disponibile. Verifica la
+                migrazione e le autorizzazioni; non significa assenza di
+                recensioni pendenti.
+              </p>
+            ) : pendingReviews.length === 0 ? (
               <div className="rounded-lg border border-dashed p-12 text-center text-muted-foreground">
                 Nessuna recensione in attesa di moderazione
               </div>
