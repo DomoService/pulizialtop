@@ -33,6 +33,7 @@ export default async function Page() {
             statistiche sì/no, versione, data della scelta e scadenza di sei mesi, senza
             identificatore utente o invio al server.
           </li>
+          <li>Informazione tecnica: localStorage pulizialtop-cookie-info-v1, fornitore PuliziAlTop, avvenuta visualizzazione (versione, data e scadenza), sei mesi, senza identificativi e senza invio al server. È separata dalla preferenza di consenso.</li>
           <li>
             Componente sidebar, se utilizzato: cookie sidebar_state per stato
             del menu, durata nel codice 7 giorni; non risulta utilizzato nelle
@@ -59,13 +60,12 @@ export default async function Page() {
           Se sono abilitati strumenti facoltativi, compaiono Accetta tutti,
           Rifiuta non necessari e Personalizza con uguale accessibilità. Rifiutare o
           chiudere senza scelta non abilita statistiche. Puoi riaprire{" "}
-          <CookiePreferencesLink /> in qualsiasi momento; revocare ricarica la
+          <CookiePreferencesLink enabled={settings.analyticsEnabled} /> in qualsiasi momento; revocare ricarica la
           pagina per arrestare gli script già caricati. Sono rimossi i cookie GA
           legacy raggiungibili sul dominio, non quelli di altri siti.
         </p>
         <p>
-          Se restano solo strumenti tecnici, non viene mostrato un banner
-          automatico; il comando nel footer resta disponibile. La preferenza
+          Se restano solo strumenti tecnici, viene mostrato al primo accesso un popup esclusivamente informativo; la chiusura registra soltanto l’avvenuta visualizzazione per sei mesi, non un consenso. Una scelta di consenso già valida è rispettata. Il comando nel footer resta disponibile. La preferenza
           vale sei mesi sul dispositivo; non viene chiesta nuovamente a ogni
           visita mentre resta valida. La durata scelta segue il criterio delle
           linee guida cookie del Garante, non i tempi dei dati aziendali. La

@@ -157,7 +157,7 @@ export async function Footer() {
               </Link>
               <Link href="/diritti-privacy" className="hover:underline">Diritti Privacy</Link>
               <Link href="/contattaci" className="hover:underline">Contatti</Link>
-              <CookiePreferencesLink />
+              <CookiePreferencesLink enabled={settings.analyticsEnabled} />
             </div>
           </div>
         </div>

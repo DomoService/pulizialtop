@@ -7,7 +7,7 @@ import {
   requestSchema,
   registrationSchema,
 } from "../lib/legal/schema"
-import { consentRecord, readConsent, isPrivatePath } from "../lib/legal/consent"
+import { CONSENT_KEY, consentRecord, readConsent, isPrivatePath } from "../lib/legal/consent"
 const rpc = mock(async () => ({
   data: "00000000-0000-0000-0000-000000000003",
   error: null,
@@ -206,4 +206,15 @@ test('notice version is explicit while valid legacy choices are preserved',async
  expect(readConsent(JSON.stringify({...record,noticeVersion:'unknown-version'}))).toBeNull()
  delete record.noticeVersion
  expect(readConsent(JSON.stringify(record))).toBe(false)
+})
+
+test('informational acknowledgement has its own six-month record, not consent',async()=>{
+ const {cookieInfoRecord,hasSeenCookieInfo,COOKIE_INFO_KEY}=await import('../lib/legal/consent')
+ const now=new Date('2026-11-06T12:00:00Z'),raw=cookieInfoRecord(now)
+ expect(COOKIE_INFO_KEY).not.toBe(CONSENT_KEY)
+ expect(JSON.parse(raw)).not.toHaveProperty('analytics')
+ expect(hasSeenCookieInfo(raw,now.getTime())).toBe(true)
+ expect(hasSeenCookieInfo(raw,Date.parse('2027-05-07'))).toBe(false)
+ expect(hasSeenCookieInfo('broken')).toBe(false)
+ expect(readConsent(raw)).toBeNull()
 })

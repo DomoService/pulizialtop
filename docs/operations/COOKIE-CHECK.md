@@ -41,3 +41,23 @@ reopening/revocation, GA cleanup, X/Escape, technical-only mode, malformed/expir
 records and denied storage. Desktop 1280x800 / mobile 390x844. This is not a real
 provider backend/network capture. Deployment verification is recorded in PR.
 No production change or existing preference deletion is part of this correction.
+
+## Informational first-visit mode (latest update)
+
+When effective analytics is disabled, show Informazioni sui cookie automatically
+unless a valid existing consent choice OR an unexpired information acknowledgement
+already exists. The requested technical-only statement matches code-controlled
+active tools (no profiling/advertising); external provider injection remains outside
+this code audit. Never enable optional tools to justify the popup.
+
+Ho capito, X, Escape store only pulizialtop-cookie-info-v1 {version,seenAt,expires},
+six months. They do not create/change the consent key or enable analytics. The
+footer and cookie policy command use Informazioni sui cookie in technical-only
+mode, Preferenze cookie when optional tools are actually enabled. An informational
+acknowledgement does NOT suppress the consent banner if analytics is later enabled.
+
+Clean browser tests additionally cover automatic information at direct entry,
+acknowledgement/reload/internal navigation, footer reopening, X/Escape and existing
+valid legacy refusal preservation at both desktop and mobile sizes. No data from
+real users is cleared by this code. Preview checks documented in the PR; this
+update is not a production rollout.

@@ -12,6 +12,9 @@ import {
 import { Button } from "@/components/ui/button"
 import {
   CONSENT_KEY,
+  COOKIE_INFO_KEY,
+  cookieInfoRecord,
+  hasSeenCookieInfo,
   consentRecord,
   readConsent,
   isPrivatePath,
@@ -27,6 +30,7 @@ export function CookiePreferences({ enabled }: { enabled: boolean }) {
   const temporaryChoice = useRef<string | null>(null)
   const [storageError, setStorageError] = useState(false)
   const opener = useRef<HTMLElement | null>(null)
+  const infoSeenThisVisit = useRef(false)
   const path = usePathname()
   useEffect(() => {
     let saved: boolean | null = null
@@ -36,7 +40,10 @@ export function CookiePreferences({ enabled }: { enabled: boolean }) {
     allowed.current = saved === true
     setChoice(saved)
     setAnalytics(saved === true)
-    setOpen(enabled && saved === null)
+    let seen = false
+    try { seen = hasSeenCookieInfo(localStorage.getItem(COOKIE_INFO_KEY)) } catch { setStorageError(true) }
+    // Existing valid consent suppresses unsolicited information, but is never overwritten.
+    setOpen(enabled ? saved === null : saved === null && !seen && !infoSeenThisVisit.current)
     const handler = () => {
       opener.current = document.activeElement as HTMLElement
       setAnalytics(allowed.current)
@@ -58,7 +65,7 @@ export function CookiePreferences({ enabled }: { enabled: boolean }) {
         allowed.current = false
         setChoice(null)
         setAnalytics(false)
-        setOpen(enabled)
+        if (enabled) setOpen(true)
       }
     }
     const timer = window.setInterval(expire, 60_000)
@@ -71,6 +78,12 @@ export function CookiePreferences({ enabled }: { enabled: boolean }) {
       window.clearInterval(timer)
     }
   }, [enabled])
+  function acknowledgeInfo() {
+    infoSeenThisVisit.current = true
+    try { localStorage.setItem(COOKIE_INFO_KEY, cookieInfoRecord()) }
+    catch { setStorageError(true) }
+    setOpen(false)
+  }
   function save(value: boolean) {
     // Consent must be readable after writing. Storage errors never enable analytics.
     let persisted = false
@@ -121,7 +134,7 @@ export function CookiePreferences({ enabled }: { enabled: boolean }) {
         open={open}
         onOpenChange={(v) => {
           setOpen(v)
-          if (!v && enabled) save(false)
+          if (!v) { if(enabled) save(false); else acknowledgeInfo() }
         }}
       >
         <DialogContent
@@ -129,17 +142,17 @@ export function CookiePreferences({ enabled }: { enabled: boolean }) {
           className="z-[100] max-h-[90dvh] overflow-y-auto"
           onCloseAutoFocus={(event) => { event.preventDefault(); opener.current?.focus() }}
         >
-          <DialogClose className="absolute right-4 top-3 rounded p-2 focus-visible:outline" aria-label="Chiudi: solo strumenti necessari">×</DialogClose>
-          <DialogTitle>Preferenze cookie</DialogTitle>
+          <DialogClose className="absolute right-4 top-3 rounded p-2 focus-visible:outline" aria-label={enabled ? "Chiudi: solo strumenti necessari" : "Chiudi informazioni sui cookie"}>×</DialogClose>
+          <DialogTitle>{enabled ? "Preferenze cookie" : "Informazioni sui cookie"}</DialogTitle>
           <DialogDescription>
             {enabled
               ? "I servizi statistici facoltativi sono bloccati finché non scegli. Rifiutare non limita le funzioni del sito."
-              : "Sono attivi solo strumenti tecnici necessari. Vercel Web Analytics è disabilitato: non è richiesto un consenso e non viene mostrato un banner automatico."}
+              : "Utilizziamo soltanto cookie e strumenti tecnici necessari al funzionamento del sito. Non utilizziamo strumenti di profilazione o pubblicitari. Per questi strumenti non è richiesto il tuo consenso."}
           </DialogDescription>
           <p className="text-sm">
-            Preferenze conservate sul dispositivo per sei mesi, con versione e
-            data della scelta e scadenza, senza identificativi o invio al server. Puoi cambiarle dal
-            footer. Chiudere con X o Esc mantiene solo gli strumenti necessari.{" "}
+            {enabled
+              ? "Preferenze conservate sul dispositivo per sei mesi, con versione, data e scadenza, senza identificativi o invio al server. Chiudere con X o Esc mantiene solo gli strumenti necessari."
+              : "Con Ho capito, X o Esc memorizziamo soltanto l’avvenuta visualizzazione per sei mesi. Non esprimi un consenso. Puoi riaprire queste informazioni dal footer."}{" "}
             <Link href="/privacy-policy" className="underline">Privacy Policy</Link>{" · "}
             <Link href="/cookie-policy" className="underline">
               Cookie Policy
@@ -181,8 +194,8 @@ export function CookiePreferences({ enabled }: { enabled: boolean }) {
               </>
             )}
             {!enabled && (
-              <Button variant="outline" onClick={() => setOpen(false)}>
-                Chiudi
+              <Button variant="outline" onClick={acknowledgeInfo}>
+                Ho capito
               </Button>
             )}
           </div>
@@ -191,14 +204,14 @@ export function CookiePreferences({ enabled }: { enabled: boolean }) {
     </>
   )
 }
-export function CookiePreferencesLink() {
+export function CookiePreferencesLink({ enabled = false }: { enabled?: boolean }) {
   return (
     <button
       type="button"
       className="underline-offset-4 hover:underline"
       onClick={() => window.dispatchEvent(new Event("open-cookie-preferences"))}
     >
-      Preferenze cookie
+      {enabled ? "Preferenze cookie" : "Informazioni sui cookie"}
     </button>
   )
 }

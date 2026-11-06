@@ -29,3 +29,16 @@ export function redactAnalyticsEvent<T extends { url: string; type: string }>(ev
     return { ...event, url: url.toString() }
   } catch { return null }
 }
+
+// Informational acknowledgement is deliberately NOT a consent record.
+export const COOKIE_INFO_KEY = "pulizialtop-cookie-info-v1"
+export function cookieInfoRecord(now = new Date()) {
+  const expires=new Date(now);expires.setMonth(expires.getMonth()+6)
+  return JSON.stringify({version:1,seenAt:now.getTime(),expires:expires.getTime()})
+}
+export function hasSeenCookieInfo(raw: string | null, now=Date.now()) {
+  try {
+    const value=JSON.parse(raw || "null")
+    return value?.version===1 && Number.isFinite(value.seenAt) && value.seenAt<=now && Number.isFinite(value.expires) && value.expires>now
+  } catch {return false}
+}
