@@ -1,5 +1,6 @@
 "use server"
 
+import { validatedLogoExtension } from "@/lib/logo-validation"
 import { z } from "zod"
 import { publicReviewSchema } from "@/lib/public-review"
 import { requireAdmin, requireAgencyAccess, isAdmin } from "@/lib/access"
@@ -541,7 +542,8 @@ export async function addNewAgency(formData: FormData) {
   const logoFile = formData.get("logo") as File
 
   if (logoFile && logoFile.size > 0) {
-    const fileExt = logoFile.name.split(".").pop()
+    const fileExt = await validatedLogoExtension(logoFile)
+    if (!fileExt) return { success: false, error: "Logo non valido: usa JPEG, PNG o WebP fino a 5 MiB." }
     const fileName = `${crypto.randomUUID()}.${fileExt}`
 
     const { data: uploadData, error: uploadError } = await supabase.storage
@@ -555,7 +557,7 @@ export async function addNewAgency(formData: FormData) {
       console.error("[v0] Error uploading logo:", { code: uploadError.name })
       return {
         success: false,
-        error: `Errore durante il caricamento del logo: ${uploadError.message}`,
+        error: "Errore durante il caricamento del logo",
       }
     }
 
@@ -616,7 +618,8 @@ export async function updateAgency(formData: FormData) {
   const logoFile = formData.get("logo") as File
 
   if (logoFile && logoFile.size > 0) {
-    const fileExt = logoFile.name.split(".").pop()
+    const fileExt = await validatedLogoExtension(logoFile)
+    if (!fileExt) return { success: false, error: "Logo non valido: usa JPEG, PNG o WebP fino a 5 MiB." }
     const fileName = `${crypto.randomUUID()}.${fileExt}`
 
     const { data: uploadData, error: uploadError } = await supabase.storage
@@ -668,20 +671,11 @@ export async function deleteAgency(agencyId: number) {
   const supabase = await getSupabaseServerClient()
   await requireAdmin(supabase)
 
-  await supabase.from("reviews").delete().eq("agency_id", agencyId)
-
-  await supabase.from("agency_services").delete().eq("agency_id", agencyId)
-
-  await supabase.from("review_invitations").delete().eq("agency_id", agencyId)
-
-  const { error } = await supabase
-    .from("agencies")
-    .delete()
-    .eq("agency_id", agencyId)
+  const { error } = await supabase.rpc("delete_agency_as_admin", { p_agency: agencyId })
 
   if (error) {
     console.error("[v0] Error deleting agency:", { code: error.code })
-    return { success: false, error: error.message }
+    return { success: false, error: "Eliminazione non eseguita. Verifica eventuali registri o vincoli di conservazione collegati." }
   }
 
   return { success: true }
@@ -691,11 +685,9 @@ export async function getAdminAgencyLinks() {
   const supabase = await getSupabaseServerClient()
   await requireAdmin(supabase)
   const agencies = await getAgencies()
-  const { data, error } = await supabase
-    .from("agencies")
-    .select("agency_id,review_token")
+  const { data, error } = await supabase.rpc("get_admin_agency_review_links")
   if (error) throw new Error("Impossibile leggere i link recensione")
-  const tokens = new Map(data.map((row) => [row.agency_id, row.review_token]))
+  const tokens = new Map<number, string | null>((data || []).map((row: {agency_id: number; review_token: string | null}) => [row.agency_id, row.review_token]))
   return agencies.map((agency) => ({
     ...agency,
     province: agency.province || "N/A",

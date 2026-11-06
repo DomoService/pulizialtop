@@ -145,3 +145,41 @@ servizi iniettati dalla dashboard, estensioni del visitatore o link esterni visi
   (letto anche testo EUR-Lex CELEX 32016R0679 in italiano)
 - https://vercel.com/docs/analytics/privacy-policy
 - https://vercel.com/docs/analytics/redacting-sensitive-data
+
+## Aggiornamento prerequisiti — export fornito alle 08:39
+
+L'export dichiarato dal sito pubblico mostra RLS attiva sulle tabelle; 007/008 e
+005 presenti, entrambe le funzioni 009 assenti. Vista public_agency_reviews con
+privilegi di scrittura anon/authenticated; Storage agency-logos con policy INSERT
+pubblica. Non sono prove di un attacco avvenuto. I grant di colonna non consentono
+lettura delle password/token della tabella agencies; quelli admin UPDATE/DELETE
+non risultano disponibili. Non confondere RLS disattivata sulle viste con tabelle.
+
+Preparato scripts/010_release_prerequisites.sql, NON applicato dall'agente:
+- transazione unica con prerequisiti e timeout, nessuna riga o file cancellato;
+- ricrea vista approved-only con colonne esplicite e revoca anche grant di colonna,
+  mantenendo solo SELECT pubblico;
+- due RPC 009, RPC admin per leggere token senza concederli a utenti ordinari;
+- UPDATE profilo limitato a colonne previste + policy restrittiva admin;
+- RPC cancellazione esplicita admin transazionale: eventuali vincoli di audit
+  fanno fallire tutto senza rimozioni parziali. Non viene eseguita dallo script;
+- upload logo soltanto admin, guard restrittivi anche con altre policy permissive;
+  bucket max 5 MiB (o limite inferiore preesistente), MIME raster ammessi senza
+  toccare file vecchi; guardia contenuto/firma lato server nel codice;
+- risultato finale unico senza dati personali o token.
+
+Script da provare nel database separato poi, solo a esito positivo e con backup
+verificato disponibile, nel progetto pubblico. Qualsiasi errore: fermarsi e
+condividere errore, non eseguire i pezzi separatamente o aprire privilegi generali.
+Non chiamare una migrazione produzione riuscita senza l'esito dell'operatore.
+
+Verifiche isolate: riprodotta scrittura anonima sulla vecchia vista, poi negata
+con la correzione. Rerun script, diniego upload anon/ordinario anche in presenza
+policy extra permissiva, admin update/lettura token/upload, credenziali private
+negate, rollback su vincolo audit e cancellazione atomica su fixture tutti passati.
+Non è una verifica del servizio Storage live o delle funzioni preesistenti 004.
+40 test Bun passati in processi separati e TypeScript passato. Gli esiti browser
+precedenti riguardano 065ddd7: aggiornamento corrente lato server/SQL senza nuovo
+layout; la build e l'anteprima del nuovo commit vanno verificate separatamente.
+Restano dati informativa/retention e impostazioni esterne da confermare: lo script
+non inventa o approva queste decisioni e non rende l'informativa definitiva.

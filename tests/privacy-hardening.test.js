@@ -30,3 +30,11 @@ test("unreviewed image origins cannot load in the visitor browser", () => {
   expect(publicImageUrl(`${base}/storage/v1/object/public/agency-logos/a.png`, base)).toContain("agency-logos")
   for (const url of ["//tracker.test/pixel", "/\\tracker.test/pixel", "https://tracker.test/pixel", "javascript:alert(1)", `${base}/auth/v1/verify?token=x`]) expect(publicImageUrl(url, base)).toBeNull()
 })
+
+test("logo upload rejects active content, MIME mismatch and oversize", async () => {
+  const {validatedLogoExtension}=await import('../lib/logo-validation')
+  expect(await validatedLogoExtension(new File([new Uint8Array([137,80,78,71,13,10,26,10])],'x.png',{type:'image/png'}))).toBe('png')
+  expect(await validatedLogoExtension(new File(['<svg onload="alert(1)">'],'x.svg',{type:'image/svg+xml'}))).toBeNull()
+  expect(await validatedLogoExtension(new File(['<html>'],'x.png',{type:'image/png'}))).toBeNull()
+  expect(await validatedLogoExtension(new File([new Uint8Array(5242881)],'x.png',{type:'image/png'}))).toBeNull()
+})
